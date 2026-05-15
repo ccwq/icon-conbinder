@@ -602,27 +602,21 @@ html(lang="zh")
             section.section.full
               .section-title
                 strong 图片来源
-                span 本地文件或 `imageUrl`
+                span `image` 输入
               .stack
-                .upload-zone#uploadZone
-                  input#imageUpload(type="file", accept="image/*")
-                  .hint
-                    strong 拖放或单击上传
-                    span 本地文件优先用于预览和请求复制；不上传时使用 `imageUrl`。
-                    span.file-line#fileName 未选择文件
                 .grid-2
                   .field
                     .field-label
-                      span 图片地址
-                      span.value#imageUrlState -
-                    input#imageUrl(type="text", placeholder="https://example.com/icon.png", value=state.imageUrl || "")
+                      span 图片输入
+                      span.value#imageState -
+                    input#image(type="text", placeholder="https://example.com/icon.png / /assets/icon.png / data:image/png;base64,...", value=state.image || "")
                   .field
                     .field-label
                       span 请求方式
-                      span.value#requestMode GET
-                    input#requestModeInput(type="text", readonly, value="GET /icon")
+                      span.value#requestMode POST
+                    input#requestModeInput(type="text", readonly, value="POST /icon")
                 .inline-note
-                  | 预览直接走服务端 API；本地文件时复制 `curl -X POST`，否则复制 `GET` 链接。
+                  | `image` 支持完整 URL、相对路径（可结合 `.env` 的 `IMAGE_URL_PREFIX` 合成）以及 `data:image/*;base64,...`。若启用 `IMAGE_URL_PREFIX_ONLY`，最终 URL 必须命中前缀；若启用 `IMAGE_ENABLE_BASE64`，`data:` 才会被接受。
 
             section.section
               .section-title
@@ -832,15 +826,11 @@ html(lang="zh")
         };
         const state = {
           ...initialState,
-          file: null,
-          fileName: "",
         };
 
         const els = {
-          fileName: document.getElementById("fileName"),
-          imageUpload: document.getElementById("imageUpload"),
-          imageUrl: document.getElementById("imageUrl"),
-          imageUrlState: document.getElementById("imageUrlState"),
+          image: document.getElementById("image"),
+          imageState: document.getElementById("imageState"),
           requestMode: document.getElementById("requestMode"),
           requestModeInput: document.getElementById("requestModeInput"),
           shapeGrid: document.getElementById("shapeGrid"),
@@ -890,7 +880,6 @@ html(lang="zh")
           copyRequestBtn2: document.getElementById("copyRequestBtn2"),
           copyQueryBtn: document.getElementById("copyQueryBtn"),
           copyQueryBtn2: document.getElementById("copyQueryBtn2"),
-          uploadZone: document.getElementById("uploadZone"),
         };
 
         let previewObjectUrl = "";
@@ -899,6 +888,12 @@ html(lang="zh")
 
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
         const round2 = (value) => Number.parseFloat(Number(value).toFixed(2));
+        const describeImageState = (image) => {
+          if (!image) return "-";
+          if (image.startsWith("data:image/")) return "base64";
+          if (/^https?:\/\//i.test(image)) return "URL";
+          return "相对路径";
+        };
 
         const formatNumber = (value) => {
           const normalized = Number(value);
@@ -906,11 +901,10 @@ html(lang="zh")
         };
 
         const syncControlValues = () => {
-          els.imageUrl.value = state.imageUrl || "";
-          els.imageUrlState.textContent = state.imageUrl ? "已填写" : "-";
-          els.fileName.textContent = state.fileName || "未选择文件";
-          els.requestMode.textContent = state.file ? "POST" : "GET";
-          els.requestModeInput.value = state.file ? "POST /icon" : "GET /icon";
+          els.image.value = state.image || "";
+          els.imageState.textContent = describeImageState(state.image);
+          els.requestMode.textContent = "POST";
+          els.requestModeInput.value = "POST /icon";
           els.iconSizeValue.textContent = String(state.iconSize);
           els.iconSizeRange.value = state.iconSize;
           els.iconSizeInput.value = state.iconSize;
@@ -974,8 +968,8 @@ html(lang="zh")
           params.set("exportStrategy", state.exportStrategy);
           params.set("antiAliasScale", String(state.antiAliasScale));
           params.set("resizeStrategy", state.resizeStrategy);
-          if (state.imageUrl) {
-            params.set("imageUrl", state.imageUrl);
+          if (state.image) {
+            params.set("image", state.image);
           }
           return params;
         };
@@ -988,36 +982,38 @@ html(lang="zh")
         };
 
         const buildRequestText = () => {
-          const query = buildQueryParams().toString();
-          if (state.file) {
-            const lines = [
-              `curl -X POST "${apiIconUrl}" \\`,
-              `  -F "shape=${state.shape}" \\`,
-              `  -F "iconSize=${state.iconSize}" \\`,
-              `  -F "imageScale=${state.imageScale}" \\`,
-              `  -F "imageOffsetY=${state.imageOffsetY}" \\`,
-              `  -F "borderWidth=${state.borderWidth}" \\`,
-              `  -F "lineJoin=${state.lineJoin}" \\`,
-              `  -F "borderColor=${state.borderColor}" \\`,
-              `  -F "bgColor=${state.bgColor}" \\`,
-              `  -F "enableShadow=${state.enableShadow ? 1 : 0}" \\`,
-              `  -F "shadowBlur=${state.shadowBlur}" \\`,
-              `  -F "shadowOffsetY=${state.shadowOffsetY}" \\`,
-              `  -F "exportSquare=${state.exportSquare ? 1 : 0}" \\`,
-              `  -F "exportStrategy=${state.exportStrategy}" \\`,
-              `  -F "antiAliasScale=${state.antiAliasScale}" \\`,
-              `  -F "resizeStrategy=${state.resizeStrategy}" \\`,
-              `  -F "image=@${state.fileName || "image.png"}" \\`,
-              `  -o output.png`,
-            ];
-            return lines.join("\n");
+          const lines = [
+            `curl -X POST "${apiIconUrl}" \\`,
+            `  -F "shape=${state.shape}" \\`,
+            `  -F "iconSize=${state.iconSize}" \\`,
+            `  -F "imageScale=${state.imageScale}" \\`,
+            `  -F "imageOffsetY=${state.imageOffsetY}" \\`,
+            `  -F "borderWidth=${state.borderWidth}" \\`,
+            `  -F "lineJoin=${state.lineJoin}" \\`,
+            `  -F "borderColor=${state.borderColor}" \\`,
+            `  -F "bgColor=${state.bgColor}" \\`,
+            `  -F "enableShadow=${state.enableShadow ? 1 : 0}" \\`,
+            `  -F "shadowBlur=${state.shadowBlur}" \\`,
+            `  -F "shadowOffsetY=${state.shadowOffsetY}" \\`,
+            `  -F "exportSquare=${state.exportSquare ? 1 : 0}" \\`,
+            `  -F "exportStrategy=${state.exportStrategy}" \\`,
+            `  -F "antiAliasScale=${state.antiAliasScale}" \\`,
+            `  -F "resizeStrategy=${state.resizeStrategy}" \\`,
+          ];
+          if (state.image) {
+            lines.push(`  -F "image=${state.image}" \\`);
           }
-          return `${apiIconUrl}?${query}`;
+          lines.push(`  -o output.png`);
+          return lines.join("\n");
         };
 
         const buildPreviewRequest = () => {
           const query = buildPreviewParams().toString();
           return `${apiIconUrl}?${query}&_=${Date.now()}`;
+        };
+
+        const shouldUsePostPreview = () => {
+          return !!(state.image && (state.image.startsWith("data:") || state.image.length > 1200));
         };
 
         const copyText = async (text) => {
@@ -1038,10 +1034,8 @@ html(lang="zh")
 
         const updateRequestBox = () => {
           els.requestText.value = buildRequestText();
-          els.requestHint.textContent = state.file
-            ? "已选择本地文件，复制内容为 multipart `curl` 请求；预览保持 `1x`。"
-            : "当前复制内容为 GET 请求 URL；预览保持 `1x`。";
-          els.previewMode.textContent = state.file ? "POST" : "GET";
+          els.requestHint.textContent = "复制内容为 multipart `curl` 请求，`image` 作为文本字段；查询串按钮仍可复制 GET 预览 URL。";
+          els.previewMode.textContent = "POST";
         };
 
         const updatePreviewInfo = async () => {
@@ -1065,7 +1059,8 @@ html(lang="zh")
         const updatePreviewImage = async () => {
           const token = ++previewToken;
           els.previewStatus.textContent = "加载中";
-          els.previewTip.textContent = state.file ? "POST /icon" : "GET /icon";
+          const usePost = shouldUsePostPreview();
+          els.previewTip.textContent = usePost ? "POST /icon" : "GET /icon";
 
           if (previewObjectUrl) {
             URL.revokeObjectURL(previewObjectUrl);
@@ -1073,9 +1068,11 @@ html(lang="zh")
           }
 
           try {
-            if (state.file) {
+            if (usePost) {
               const formData = new FormData();
-              formData.set("image", state.file, state.fileName || state.file.name);
+              if (state.image) {
+                formData.set("image", state.image);
+              }
               for (const [key, value] of buildPreviewParams().entries()) {
                 formData.set(key, value);
               }
@@ -1098,7 +1095,7 @@ html(lang="zh")
             }
             if (token !== previewToken) return;
             els.previewStatus.textContent = "已更新";
-            els.previewTip.textContent = state.file ? state.fileName : "imageUrl / query";
+            els.previewTip.textContent = usePost ? "POST /icon" : "GET /icon";
           } catch (error) {
             if (token !== previewToken) return;
             els.previewStatus.textContent = "预览失败";
@@ -1160,32 +1157,9 @@ html(lang="zh")
         els.enableShadowSwitch.addEventListener("click", () => setState({ enableShadow: !state.enableShadow }));
         els.exportSquareSwitch.addEventListener("click", () => setState({ exportSquare: !state.exportSquare }));
 
-        els.imageUrl.addEventListener("input", (event) => {
-          const nextImageUrl = event.target.value.trim();
-          setState({ imageUrl: nextImageUrl });
-        });
-
-        els.imageUpload.addEventListener("change", (event) => {
-          const file = event.target.files && event.target.files[0];
-          if (!file) return;
-          setState({ file, fileName: file.name });
-        });
-
-        els.uploadZone.addEventListener("dragover", (event) => {
-          event.preventDefault();
-          els.uploadZone.classList.add("drag");
-        });
-
-        els.uploadZone.addEventListener("dragleave", () => {
-          els.uploadZone.classList.remove("drag");
-        });
-
-        els.uploadZone.addEventListener("drop", (event) => {
-          event.preventDefault();
-          els.uploadZone.classList.remove("drag");
-          const file = event.dataTransfer.files && event.dataTransfer.files[0];
-          if (!file) return;
-          setState({ file, fileName: file.name });
+        els.image.addEventListener("input", (event) => {
+          const nextImage = event.target.value.trim();
+          setState({ image: nextImage });
         });
 
         const copyCurrentRequest = async () => {

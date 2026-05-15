@@ -142,12 +142,7 @@ test("POST /icon writes 50 composed PNG files under 50px", async () => {
           antiAliasScale: String(shapeCase.antiAliasScale),
           resizeStrategy: shapeCase.resizeStrategy,
         };
-        const multipart = buildMultipartForm(fields, {
-          name: "image",
-          filename: iconCase.file,
-          contentType: "image/png",
-          buffer: baseIcon,
-        });
+        const multipart = buildMultipartForm(fields);
 
         const res = await request(server, "POST", "/icon", {
           headers: {
@@ -228,6 +223,8 @@ test("GET /ui.html renders the pug template page", async () => {
     assert.match(html, /54/);
     assert.match(html, /antiAliasScale/);
     assert.match(html, /resizeStrategy/);
+    assert.match(html, /image/);
+    assert.doesNotMatch(html, /imageUrl/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -271,7 +268,6 @@ test("parseState reads defaults from ICON_PARAM env vars", async () => {
     "ICON_PARAM_EXPORT_STRATEGY",
     "ICON_PARAM_ANTI_ALIAS_SCALE",
     "ICON_PARAM_RESIZE_STRATEGY",
-    "ICON_PARAM_IMAGE_URL",
   ];
   const snapshot = snapshotEnv(envKeys);
 
@@ -291,7 +287,6 @@ test("parseState reads defaults from ICON_PARAM env vars", async () => {
     ICON_PARAM_EXPORT_STRATEGY: "bottom",
     ICON_PARAM_ANTI_ALIAS_SCALE: "4",
     ICON_PARAM_RESIZE_STRATEGY: "pixelated",
-    ICON_PARAM_IMAGE_URL: "https://example.com/default.png",
   });
 
   delete require.cache[require.resolve("../server")];
@@ -314,8 +309,180 @@ test("parseState reads defaults from ICON_PARAM env vars", async () => {
     assert.equal(state.exportStrategy, "bottom");
     assert.equal(state.antiAliasScale, 4);
     assert.equal(state.resizeStrategy, "pixelated");
-    assert.equal(state.imageUrl, "https://example.com/default.png");
+    assert.equal(state.image, null);
   } finally {
+    restoreEnv(snapshot, envKeys);
+    delete require.cache[require.resolve("../server")];
+  }
+});
+
+test("GET /icon resolves relative image URLs from IMAGE_URL_PREFIX", async () => {
+  const envKeys = ["IMAGE_URL_PREFIX", "IMAGE_URL_PREFIX_ONLY", "IMAGE_ENABLE_BASE64"];
+  const snapshot = snapshotEnv(envKeys);
+  const imageBuffer = await readBaseIcon();
+  const imageServer = http.createServer((req, res) => {
+    if (req.url === "/assets/marker.png") {
+      res.writeHead(200, {
+        "Content-Type": "image/png",
+        "Content-Length": imageBuffer.length,
+      });
+      res.end(imageBuffer);
+      return;
+    }
+    res.writeHead(404, { "Content-Type": "text/plain" });
+    res.end("not found");
+  });
+
+  await new Promise((resolve) => imageServer.listen(0, "127.0.0.1", resolve));
+  const imagePort = imageServer.address().port;
+  const imagePrefix = `http://127.0.0.1:${imagePort}/assets/`;
+
+  Object.assign(process.env, {
+    IMAGE_URL_PREFIX: imagePrefix,
+    IMAGE_URL_PREFIX_ONLY: "1",
+    IMAGE_ENABLE_BASE64: "0",
+  });
+
+  delete require.cache[require.resolve("../server")];
+  const { app: prefixApp } = require("../server");
+  const server = prefixApp.listen(0);
+
+  try {
+    const res = await request(server, "GET", "/icon?shape=pin&iconSize=24&image=marker.png");
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.headers["content-type"], "image/png");
+    assert.ok(Number(res.headers["x-icon-width"]) > 0);
+    assert.ok(Number(res.headers["x-icon-height"]) > 0);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await new Promise((resolve) => imageServer.close(resolve));
+    restoreEnv(snapshot, envKeys);
+    delete require.cache[require.resolve("../server")];
+  }
+});
+
+test("GET /icon rejects image URLs outside IMAGE_URL_PREFIX when prefix-only is on", async () => {
+  const envKeys = ["IMAGE_URL_PREFIX", "IMAGE_URL_PREFIX_ONLY", "IMAGE_ENABLE_BASE64"];
+  const snapshot = snapshotEnv(envKeys);
+
+  Object.assign(process.env, {
+    IMAGE_URL_PREFIX: "https://example.com/assets/",
+    IMAGE_URL_PREFIX_ONLY: "1",
+    IMAGE_ENABLE_BASE64: "0",
+  });
+
+  delete require.cache[require.resolve("../server")];
+  const { app: strictApp } = require("../server");
+  const server = strictApp.listen(0);
+
+  try {
+    const res = await request(
+      server,
+      "GET",
+      "/icon?shape=pin&iconSize=24&image=https://example.com/other.png"
+    );
+
+    assert.equal(res.statusCode, 400);
+    const payload = JSON.parse(res.body.toString("utf8"));
+    assert.equal(payload.code, "IMAGE_URL_PREFIX_MISMATCH");
+    assert.match(payload.error, /IMAGE_URL_PREFIX/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    restoreEnv(snapshot, envKeys);
+    delete require.cache[require.resolve("../server")];
+  }
+});
+
+test("GET /icon accepts data URLs when IMAGE_ENABLE_BASE64 is on", async () => {
+  const envKeys = ["IMAGE_URL_PREFIX", "IMAGE_URL_PREFIX_ONLY", "IMAGE_ENABLE_BASE64"];
+  const snapshot = snapshotEnv(envKeys);
+  const imageDataUrl = `data:image/png;base64,${(await readBaseIcon()).toString("base64")}`;
+
+  Object.assign(process.env, {
+    IMAGE_URL_PREFIX: "",
+    IMAGE_URL_PREFIX_ONLY: "0",
+    IMAGE_ENABLE_BASE64: "1",
+  });
+
+  delete require.cache[require.resolve("../server")];
+  const { app: base64App } = require("../server");
+  const server = base64App.listen(0);
+
+  try {
+    const res = await request(
+      server,
+      "GET",
+      `/icon?shape=pin&iconSize=24&image=${encodeURIComponent(imageDataUrl)}`
+    );
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.headers["content-type"], "image/png");
+    assert.ok(Number(res.headers["x-icon-width"]) > 0);
+    assert.ok(Number(res.headers["x-icon-height"]) > 0);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    restoreEnv(snapshot, envKeys);
+    delete require.cache[require.resolve("../server")];
+  }
+});
+
+test("GET /icon rejects data URLs when IMAGE_ENABLE_BASE64 is off", async () => {
+  const imageDataUrl = `data:image/png;base64,${(await readBaseIcon()).toString("base64")}`;
+  const server = app.listen(0);
+
+  try {
+    const res = await request(
+      server,
+      "GET",
+      `/icon?shape=pin&iconSize=24&image=${encodeURIComponent(imageDataUrl)}`
+    );
+
+    assert.equal(res.statusCode, 400);
+    const payload = JSON.parse(res.body.toString("utf8"));
+    assert.equal(payload.code, "IMAGE_BASE64_DISABLED");
+    assert.match(payload.error, /IMAGE_ENABLE_BASE64/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("POST /icon accepts data URLs in text fields when IMAGE_ENABLE_BASE64 is on", async () => {
+  const envKeys = ["IMAGE_URL_PREFIX", "IMAGE_URL_PREFIX_ONLY", "IMAGE_ENABLE_BASE64"];
+  const snapshot = snapshotEnv(envKeys);
+  const imageDataUrl = `data:image/png;base64,${(await readBaseIcon()).toString("base64")}`;
+
+  Object.assign(process.env, {
+    IMAGE_URL_PREFIX: "",
+    IMAGE_URL_PREFIX_ONLY: "0",
+    IMAGE_ENABLE_BASE64: "1",
+  });
+
+  delete require.cache[require.resolve("../server")];
+  const { app: base64PostApp } = require("../server");
+  const server = base64PostApp.listen(0);
+
+  try {
+    const multipart = buildMultipartForm(
+      {
+        shape: "pin",
+        iconSize: "24",
+        image: imageDataUrl,
+      }
+    );
+
+    const res = await request(server, "POST", "/icon", {
+      headers: {
+        "Content-Type": multipart.contentType,
+        "Content-Length": multipart.body.length,
+      },
+      body: multipart.body,
+    });
+
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.headers["content-type"], "image/png");
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
     restoreEnv(snapshot, envKeys);
     delete require.cache[require.resolve("../server")];
   }

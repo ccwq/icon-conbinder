@@ -21,10 +21,10 @@
  * exportStrategy {string}  center|bottom (default: center)
  * antiAliasScale {1|2|4}   (default: 1)
  * resizeStrategy {string}  smooth-high|pixelated|step-down|sharp-lanczos3 (default: smooth-high)
- * imageUrl       {string}  可选，图片 URL（需可公网访问）
+ * image          {string}  可选，图片输入：完整 URL / 相对路径 / data:image/*;base64,...
  *
  * POST /icon
- * Body: multipart/form-data，字段同上，图片通过 image 字段上传二进制。
+ * Body: multipart/form-data，字段同上，image 为文本字段，不再接收二进制文件上传。
  *
  * 默认值可由 `.env` 中对应的 `ICON_PARAM_*` 覆盖。
  */
@@ -44,7 +44,7 @@ const { URL } = require("url");
 const sharp = require("sharp");
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+const parseMultipartFields = multer().none();
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 
@@ -82,6 +82,116 @@ const readEnvOneOf = (name, options, fallback) => {
 
 const PORT = readEnvInt("PORT", 3000, 1, 65535);
 const ENABLE_CORS = readEnvBool("ENABLE_CORS", false);
+const IMAGE_URL_PREFIX = readEnvString("IMAGE_URL_PREFIX", "");
+const IMAGE_URL_PREFIX_ONLY = readEnvBool("IMAGE_URL_PREFIX_ONLY", false);
+const IMAGE_ENABLE_BASE64 = readEnvBool("IMAGE_ENABLE_BASE64", false);
+
+function clientError(code, message) {
+  const error = new Error(message);
+  error.statusCode = 400;
+  error.code = code;
+  return error;
+}
+
+function normalizeUrlPrefix(prefix) {
+  const trimmed = String(prefix || "").trim();
+  if (!trimmed) return "";
+
+  const parsed = new URL(trimmed);
+  if (!parsed.pathname.endsWith("/")) {
+    parsed.pathname += "/";
+  }
+  return parsed.toString();
+}
+
+const NORMALIZED_IMAGE_URL_PREFIX = normalizeUrlPrefix(IMAGE_URL_PREFIX);
+
+function isHttpUrl(value) {
+  if (typeof value !== "string" || value.length === 0) return false;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isDataImageUrl(value) {
+  return /^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=\r\n]+$/.test(value);
+}
+
+function resolveImageSource(rawImage) {
+  if (rawImage === undefined || rawImage === null) {
+    return null;
+  }
+
+  const image = String(rawImage).trim();
+  if (!image) {
+    return null;
+  }
+
+  if (image.startsWith("data:")) {
+    if (!IMAGE_ENABLE_BASE64) {
+      throw clientError(
+        "IMAGE_BASE64_DISABLED",
+        "image 传入了 data:image/*;base64,...，但 IMAGE_ENABLE_BASE64 未开启"
+      );
+    }
+    if (!isDataImageUrl(image)) {
+      throw clientError(
+        "IMAGE_BASE64_INVALID",
+        "image 必须是 data:image/*;base64,... 形式"
+      );
+    }
+    const commaIndex = image.indexOf(",");
+    const base64Part = commaIndex >= 0 ? image.slice(commaIndex + 1) : "";
+    const buffer = Buffer.from(base64Part, "base64");
+    if (!buffer.length) {
+      throw clientError(
+        "IMAGE_BASE64_INVALID",
+        "image 的 data URL 解码后为空"
+      );
+    }
+    return { kind: "data", buffer };
+  }
+
+  if (image.startsWith("//")) {
+    throw clientError(
+      "IMAGE_URL_INVALID",
+      "image 不能以 // 开头，请使用 http(s):// 或相对路径"
+    );
+  }
+
+  let resolvedUrl = null;
+  if (isHttpUrl(image)) {
+    resolvedUrl = image;
+  } else {
+    if (!NORMALIZED_IMAGE_URL_PREFIX) {
+      throw clientError(
+        "IMAGE_URL_PREFIX_REQUIRED",
+        "image 是相对路径时必须配置 IMAGE_URL_PREFIX"
+      );
+    }
+    resolvedUrl = new URL(image, NORMALIZED_IMAGE_URL_PREFIX).toString();
+  }
+
+  if (IMAGE_URL_PREFIX_ONLY) {
+    if (!NORMALIZED_IMAGE_URL_PREFIX) {
+      throw clientError(
+        "IMAGE_URL_PREFIX_REQUIRED",
+        "启用 IMAGE_URL_PREFIX_ONLY 时必须配置 IMAGE_URL_PREFIX"
+      );
+    }
+    if (!resolvedUrl.startsWith(NORMALIZED_IMAGE_URL_PREFIX)) {
+      throw clientError(
+        "IMAGE_URL_PREFIX_MISMATCH",
+        "image 解析后的 URL 必须命中 IMAGE_URL_PREFIX"
+      );
+    }
+  }
+
+  return { kind: "url", url: resolvedUrl };
+}
 
 if (ENABLE_CORS) {
   app.use(
@@ -279,10 +389,7 @@ function parseState(query) {
       RESIZE_STRATEGIES,
       defaults.resizeStrategy
     ),
-    imageUrl:
-      query.imageUrl === undefined || query.imageUrl === ""
-        ? readEnvString("ICON_PARAM_IMAGE_URL", null)
-        : query.imageUrl,
+    image: query.image === undefined || query.image === "" ? null : query.image,
   };
 }
 
@@ -577,41 +684,86 @@ async function renderComposite(state, userImage) {
 // ─── 图片加载工具 ──────────────────────────────────────────────────────────────
 
 async function loadImageFromBuffer(buffer) {
-  return await loadImage(buffer);
+  try {
+    return await loadImage(buffer);
+  } catch (err) {
+    throw clientError(
+      "IMAGE_DECODE_FAILED",
+      `image 解码失败：${err.message}`
+    );
+  }
 }
 
 async function loadImageFromUrl(url) {
   return new Promise((resolve, reject) => {
     const parsed = new URL(url);
     const lib = parsed.protocol === "https:" ? https : http;
-    lib.get(url, (res) => {
-      const chunks = [];
-      res.on("data", (c) => chunks.push(c));
-      res.on("end", async () => {
-        try {
-          const buf = Buffer.concat(chunks);
-          resolve(await loadImage(buf));
-        } catch (e) {
-          reject(e);
+    lib
+      .get(url, (res) => {
+        if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+          res.resume();
+          reject(
+            clientError(
+              "IMAGE_FETCH_FAILED",
+              `image URL 请求失败，HTTP ${res.statusCode || "unknown"}`
+            )
+          );
+          return;
         }
-      });
-      res.on("error", reject);
-    }).on("error", reject);
+
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", async () => {
+          try {
+            const buf = Buffer.concat(chunks);
+            resolve(await loadImage(buf));
+          } catch (e) {
+            reject(
+              clientError(
+                "IMAGE_DECODE_FAILED",
+                `image URL 图片解码失败：${e.message}`
+              )
+            );
+          }
+        });
+        res.on("error", reject);
+      })
+      .on("error", reject);
+  });
+}
+
+function respondRouteError(res, err) {
+  const statusCode = err && Number.isInteger(err.statusCode) ? err.statusCode : 500;
+  const code =
+    (err && err.code) || (statusCode >= 500 ? "INTERNAL_ERROR" : "BAD_REQUEST");
+
+  if (statusCode >= 500) {
+    console.error(err);
+  }
+
+  res.status(statusCode).json({
+    error: err && err.message ? err.message : "Unknown error",
+    code,
   });
 }
 
 // ─── 路由 ─────────────────────────────────────────────────────────────────────
 
 /**
- * GET /icon?shape=pin&iconSize=128&...&imageUrl=https://...
+ * GET /icon?shape=pin&iconSize=128&...&image=...
  */
 app.get("/icon", async (req, res) => {
   try {
     const state = parseState(req.query);
     let userImage = null;
 
-    if (state.imageUrl) {
-      userImage = await loadImageFromUrl(state.imageUrl);
+    const imageSource = resolveImageSource(state.image);
+    if (imageSource) {
+      if (imageSource.kind === "data") {
+        userImage = await loadImageFromBuffer(imageSource.buffer);
+      } else {
+        userImage = await loadImageFromUrl(imageSource.url);
+      }
     }
 
     const { canvas, buffer, layout } = await renderComposite(state, userImage);
@@ -625,8 +777,7 @@ app.get("/icon", async (req, res) => {
     });
     res.send(buffer);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    respondRouteError(res, err);
   }
 });
 
@@ -658,17 +809,20 @@ app.get("/ui.html", (req, res) => {
 
 /**
  * POST /icon — multipart/form-data
- * 字段与 GET 参数相同，图片通过 image 字段上传
+ * 字段与 GET 参数相同，image 为文本字段
  */
-app.post("/icon", upload.single("image"), async (req, res) => {
+app.post("/icon", parseMultipartFields, async (req, res) => {
   try {
     const state = parseState({ ...req.query, ...req.body });
     let userImage = null;
 
-    if (req.file) {
-      userImage = await loadImageFromBuffer(req.file.buffer);
-    } else if (state.imageUrl) {
-      userImage = await loadImageFromUrl(state.imageUrl);
+    const imageSource = resolveImageSource(state.image);
+    if (imageSource) {
+      if (imageSource.kind === "data") {
+        userImage = await loadImageFromBuffer(imageSource.buffer);
+      } else {
+        userImage = await loadImageFromUrl(imageSource.url);
+      }
     }
 
     const { buffer, layout } = await renderComposite(state, userImage);
@@ -682,8 +836,7 @@ app.post("/icon", upload.single("image"), async (req, res) => {
     });
     res.send(buffer);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    respondRouteError(res, err);
   }
 });
 
@@ -706,7 +859,7 @@ app.get("/info", (req, res) => {
       scale: layout.scale,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    respondRouteError(res, err);
   }
 });
 
