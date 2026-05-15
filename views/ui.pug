@@ -1,0 +1,1103 @@
+doctype html
+html(lang="zh")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title= title
+    style.
+      :root {
+        color-scheme: dark;
+        --bg: #0b1020;
+        --bg-soft: #11192c;
+        --panel: #121a2e;
+        --panel-2: #17223a;
+        --card: #1a2742;
+        --card-2: #203152;
+        --text: #ecf2ff;
+        --muted: #9fb0d1;
+        --border: #2a3a5d;
+        --border-strong: #3f5684;
+        --accent: #6ba7ff;
+        --accent-2: #78e0c1;
+        --danger: #ff8664;
+        --shadow: rgba(0, 0, 0, 0.28);
+        --radius: 18px;
+        --radius-sm: 12px;
+        --gap: 14px;
+        --pad: 16px;
+        --mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+        --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; }
+      body {
+        margin: 0;
+        color: var(--text);
+        font-family: var(--font);
+        background:
+          radial-gradient(circle at 15% 10%, rgba(107, 167, 255, 0.18), transparent 28%),
+          radial-gradient(circle at 85% 15%, rgba(120, 224, 193, 0.14), transparent 22%),
+          radial-gradient(circle at 50% 90%, rgba(107, 167, 255, 0.08), transparent 30%),
+          var(--bg);
+      }
+
+      button, input, select, textarea { font: inherit; }
+      button {
+        cursor: pointer;
+        border: 0;
+      }
+      input, select, textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        background: var(--bg-soft);
+        color: var(--text);
+        border-radius: 10px;
+        outline: none;
+      }
+      input:focus, select:focus, textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(107, 167, 255, 0.15);
+      }
+
+      .app-shell {
+        min-height: 100vh;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--panel) 90%, transparent);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+        backdrop-filter: blur(14px);
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.2;
+      }
+
+      .brand p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .chip-btn,
+      .primary-btn,
+      .ghost-btn {
+        min-height: 34px;
+        padding: 0 14px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      }
+
+      .chip-btn:hover,
+      .primary-btn:hover,
+      .ghost-btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .ghost-btn {
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+      }
+
+      .chip-btn {
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--muted);
+      }
+
+      .primary-btn {
+        border: 1px solid transparent;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 14px 26px rgba(107, 167, 255, 0.18);
+      }
+
+      .layout {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(420px, 560px) minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .panel,
+      .preview {
+        min-height: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--panel) 94%, transparent);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+        overflow: hidden;
+      }
+
+      .panel {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .panel-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        padding: var(--pad);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--gap);
+        align-content: start;
+      }
+
+      .section {
+        padding: 12px;
+        background: color-mix(in srgb, var(--panel-2) 88%, transparent);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .section.full { grid-column: 1 / -1; }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .section-title strong {
+        font-size: 12px;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--text);
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .field-label,
+      .inline-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .field-label .value {
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .shape-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .shape-card {
+        min-height: 84px;
+        padding: 10px 8px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--card);
+        color: var(--muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+      }
+
+      .shape-card:hover {
+        transform: translateY(-1px);
+        border-color: var(--border-strong);
+      }
+
+      .shape-card.active {
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 12%, var(--card));
+        color: var(--text);
+      }
+
+      .shape-card svg {
+        width: 34px;
+        height: 34px;
+        overflow: visible;
+      }
+
+      .shape-card path,
+      .shape-card circle,
+      .shape-card rect,
+      .shape-card polygon {
+        fill: color-mix(in srgb, var(--panel) 88%, white);
+        stroke: currentColor;
+        stroke-width: 1.6;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .upload-zone {
+        position: relative;
+        min-height: 104px;
+        border-radius: 12px;
+        border: 1.5px dashed var(--border-strong);
+        background: var(--card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 14px;
+        overflow: hidden;
+      }
+
+      .upload-zone.drag {
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 10%, var(--card));
+      }
+
+      .upload-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      .upload-zone .hint {
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .upload-zone .hint strong {
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .file-line {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--accent-2);
+        word-break: break-all;
+      }
+
+      .range-row {
+        display: grid;
+        grid-template-columns: 1fr 72px;
+        gap: 10px;
+        align-items: center;
+      }
+
+      input[type="range"] {
+        appearance: none;
+        height: 4px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 2px solid var(--accent);
+        box-shadow: 0 0 0 4px rgba(107, 167, 255, 0.14);
+      }
+
+      input[type="color"] {
+        width: 46px;
+        height: 32px;
+        padding: 0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .color-row {
+        display: grid;
+        grid-template-columns: 46px 1fr 86px;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .switch {
+        width: 44px;
+        height: 24px;
+        border-radius: 999px;
+        background: var(--border);
+        position: relative;
+        cursor: pointer;
+        flex: 0 0 auto;
+        transition: background 0.12s ease;
+      }
+
+      .switch::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        transition: left 0.12s ease;
+      }
+
+      .switch.on {
+        background: var(--accent);
+      }
+
+      .switch.on::after {
+        left: 22px;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .request-box {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .request-box textarea {
+        min-height: 166px;
+        resize: vertical;
+        padding: 12px;
+        font-family: var(--mono);
+        font-size: 11px;
+        line-height: 1.5;
+      }
+
+      .request-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .preview {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .preview-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        background: color-mix(in srgb, var(--panel-2) 75%, transparent);
+      }
+
+      .preview-head h2 {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      .preview-meta {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .preview-body {
+        flex: 1;
+        min-height: 0;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .preview-stage {
+        flex: 1;
+        min-height: 420px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background:
+          radial-gradient(circle at 20% 20%, rgba(107, 167, 255, 0.06), transparent 28%),
+          radial-gradient(circle at 80% 80%, rgba(120, 224, 193, 0.06), transparent 26%),
+          #0f1422;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .preview-stage::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%) 0 0 / 22px 22px,
+          linear-gradient(-45deg, rgba(255,255,255,0.03) 25%, transparent 25%) 0 11px / 22px 22px;
+        opacity: 0.14;
+        pointer-events: none;
+      }
+
+      #previewImage {
+        position: relative;
+        z-index: 1;
+        max-width: 92%;
+        max-height: 92%;
+        display: block;
+        user-select: none;
+      }
+
+      .preview-status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .preview-status strong {
+        color: var(--text);
+      }
+
+      .inline-note {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (max-width: 1100px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .app-shell { padding: 12px; }
+        .topbar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .toolbar {
+          justify-content: flex-start;
+        }
+        .panel-scroll {
+          grid-template-columns: 1fr;
+        }
+        .section.full { grid-column: auto; }
+        .grid-2,
+        .shape-grid,
+        .color-row {
+          grid-template-columns: 1fr;
+        }
+        .preview-stage {
+          min-height: 320px;
+        }
+      }
+  body
+    .app-shell
+      header.topbar
+        .brand
+          h1 Pin Icon UI
+          p 通过 `pug` 模板直接调用 `server.js` 的 `/icon` 和 `/info`，所有参数实时预览并可复制请求。
+        .toolbar
+          button#copyRequestBtn.chip-btn(type="button") 复制请求
+          button#copyQueryBtn.ghost-btn(type="button") 复制查询串
+          a.primary-btn(href="/icon?shape=pin&iconSize=128", target="_blank", rel="noreferrer") 打开示例
+
+      main.layout
+        section.panel
+          .panel-scroll
+            section.section.full
+              .section-title
+                strong 图片输入
+                span 支持本地文件与 `imageUrl`
+              .stack
+                .upload-zone#uploadZone
+                  input#imageUpload(type="file", accept="image/*")
+                  .hint
+                    strong 拖放或点击上传本地图片
+                    span 本地文件会优先用于预览与请求复制；如果不选文件，则走 `imageUrl`。
+                    span.file-line#fileName 未选择文件
+                .grid-2
+                  .field
+                    .field-label
+                      span imageUrl
+                      span.value#imageUrlState -
+                    input#imageUrl(type="text", placeholder="https://example.com/icon.png", value=state.imageUrl || "")
+                  .field
+                    .field-label
+                      span 请求方式
+                      span.value#requestMode GET
+                    input#requestModeInput(type="text", readonly, value="GET /icon")
+                .inline-note
+                  | 说明：预览会优先调用服务端 API；复制请求时，本地文件会生成 `curl -X POST`，远程图片或无文件时生成 `GET` URL。
+
+            section.section
+              .section-title
+                strong 形状
+                span `shape`
+              .shape-grid#shapeGrid
+                each shape in shapeOptions
+                  button.shape-card(type="button", data-shape=shape.value, aria-pressed=shape.value === state.shape ? "true" : "false", class=shape.value === state.shape ? "active" : "")
+                    svg(viewBox="0 0 24 24", aria-hidden="true")
+                      path(d=shape.path)
+                    span= shape.label
+
+            section.section
+              .section-title
+                strong 尺寸
+                span `iconSize`
+              .field
+                .field-label
+                  span 形状高度
+                  span.value#iconSizeValue= state.iconSize
+                .range-row
+                  input#iconSizeRange(type="range", min="1", max="2048", step="1", value=state.iconSize)
+                  input#iconSizeInput(type="number", min="1", max="2048", step="1", value=state.iconSize)
+
+            section.section
+              .section-title
+                strong 图片参数
+                span `imageScale` / `imageOffsetY`
+              .field
+                .field-label
+                  span imageScale
+                  span.value#imageScaleValue= state.imageScale.toFixed(2)
+                .range-row
+                  input#imageScaleRange(type="range", min="0.01", max="10", step="0.01", value=state.imageScale)
+                  input#imageScaleInput(type="number", min="0.01", max="10", step="0.01", value=state.imageScale)
+              .field
+                .field-label
+                  span imageOffsetY
+                  span.value#imageOffsetYValue= state.imageOffsetY
+                .range-row
+                  input#imageOffsetYRange(type="range", min="-50", max="50", step="1", value=state.imageOffsetY)
+                  input#imageOffsetYInput(type="number", min="-50", max="50", step="1", value=state.imageOffsetY)
+
+            section.section
+              .section-title
+                strong 边框
+                span `borderWidth` / `lineJoin`
+              .field
+                .field-label
+                  span borderWidth
+                  span.value#borderWidthValue= state.borderWidth
+                .range-row
+                  input#borderWidthRange(type="range", min="0", max="20", step="1", value=state.borderWidth)
+                  input#borderWidthInput(type="number", min="0", max="20", step="1", value=state.borderWidth)
+              .field
+                .field-label
+                  span lineJoin
+                  span.value= state.lineJoin
+                select#lineJoinSelect
+                  option(value="round", selected=state.lineJoin === "round") round
+                  option(value="miter", selected=state.lineJoin === "miter") miter
+                  option(value="bevel", selected=state.lineJoin === "bevel") bevel
+
+            section.section
+              .section-title
+                strong 颜色
+                span `borderColor` / `bgColor`
+              .field
+                .color-row
+                  input#borderColor(type="color", value=state.borderColor)
+                  input#borderColorHex(type="text", value=state.borderColor)
+                  span.value borderColor
+                .color-row
+                  input#bgColor(type="color", value=state.bgColor)
+                  input#bgColorHex(type="text", value=state.bgColor)
+                  span.value bgColor
+
+            section.section
+              .section-title
+                strong 阴影
+                span `enableShadow` / `shadowBlur` / `shadowOffsetY`
+              .toggle-row
+                .field-label
+                  span enableShadow
+                  span.value#enableShadowValue= state.enableShadow ? "1" : "0"
+                .switch#enableShadowSwitch(class=state.enableShadow ? "on" : "")
+              .field
+                .field-label
+                  span shadowBlur
+                  span.value#shadowBlurValue= state.shadowBlur
+                .range-row
+                  input#shadowBlurRange(type="range", min="0", max="50", step="1", value=state.shadowBlur)
+                  input#shadowBlurInput(type="number", min="0", max="50", step="1", value=state.shadowBlur)
+              .field
+                .field-label
+                  span shadowOffsetY
+                  span.value#shadowOffsetYValue= state.shadowOffsetY
+                .range-row
+                  input#shadowOffsetYRange(type="range", min="-20", max="20", step="1", value=state.shadowOffsetY)
+                  input#shadowOffsetYInput(type="number", min="-20", max="20", step="1", value=state.shadowOffsetY)
+
+            section.section
+              .section-title
+                strong 导出
+                span `exportSquare` / `exportStrategy`
+              .toggle-row
+                .field-label
+                  span exportSquare
+                  span.value#exportSquareValue= state.exportSquare ? "1" : "0"
+                .switch#exportSquareSwitch(class=state.exportSquare ? "on" : "")
+              .field
+                .field-label
+                  span exportStrategy
+                  span.value#exportStrategyValue= state.exportStrategy
+                select#exportStrategySelect
+                  option(value="center", selected=state.exportStrategy === "center") center
+                  option(value="bottom", selected=state.exportStrategy === "bottom") bottom
+
+            section.section.full
+              .section-title
+                strong 请求复制
+                span 当前状态生成的 API 请求
+              .request-box
+                textarea#requestText(readonly)
+                .request-actions
+                  button#copyRequestBtn2.primary-btn(type="button") 复制请求
+                  button#copyQueryBtn2.ghost-btn(type="button") 复制查询串
+                .inline-note#requestHint
+                  | 本地图片优先生成 multipart 请求；如果没有本地图片，就复制 `GET /icon?...`。
+
+        section.preview
+          .preview-head
+            h2 预览
+            .preview-meta
+              span#previewSize 0 × 0
+              |  · 
+              span#previewMode GET
+          .preview-body
+            .preview-stage
+              img#previewImage(alt="服务端预览")
+            .preview-status
+              .left
+                strong#previewStatus 加载中
+                |  · 
+                span#previewTip 等待参数变更
+              .right
+                span#previewInfo -
+
+    script.
+      window.__ICON_PAGE__ = !{pageDataJson};
+
+    script.
+      (() => {
+        const config = window.__ICON_PAGE__;
+        const initialState = config.state;
+        const apiBaseUrl = config.apiBaseUrl;
+        const apiIconUrl = `${apiBaseUrl}${config.apiIconPath}`;
+        const apiInfoUrl = `${apiBaseUrl}${config.apiInfoPath}`;
+        const state = {
+          ...initialState,
+          file: null,
+          fileName: "",
+        };
+
+        const els = {
+          fileName: document.getElementById("fileName"),
+          imageUpload: document.getElementById("imageUpload"),
+          imageUrl: document.getElementById("imageUrl"),
+          imageUrlState: document.getElementById("imageUrlState"),
+          requestMode: document.getElementById("requestMode"),
+          requestModeInput: document.getElementById("requestModeInput"),
+          shapeGrid: document.getElementById("shapeGrid"),
+          iconSizeRange: document.getElementById("iconSizeRange"),
+          iconSizeInput: document.getElementById("iconSizeInput"),
+          iconSizeValue: document.getElementById("iconSizeValue"),
+          imageScaleRange: document.getElementById("imageScaleRange"),
+          imageScaleInput: document.getElementById("imageScaleInput"),
+          imageScaleValue: document.getElementById("imageScaleValue"),
+          imageOffsetYRange: document.getElementById("imageOffsetYRange"),
+          imageOffsetYInput: document.getElementById("imageOffsetYInput"),
+          imageOffsetYValue: document.getElementById("imageOffsetYValue"),
+          borderWidthRange: document.getElementById("borderWidthRange"),
+          borderWidthInput: document.getElementById("borderWidthInput"),
+          borderWidthValue: document.getElementById("borderWidthValue"),
+          lineJoinSelect: document.getElementById("lineJoinSelect"),
+          borderColor: document.getElementById("borderColor"),
+          borderColorHex: document.getElementById("borderColorHex"),
+          bgColor: document.getElementById("bgColor"),
+          bgColorHex: document.getElementById("bgColorHex"),
+          enableShadowSwitch: document.getElementById("enableShadowSwitch"),
+          enableShadowValue: document.getElementById("enableShadowValue"),
+          shadowBlurRange: document.getElementById("shadowBlurRange"),
+          shadowBlurInput: document.getElementById("shadowBlurInput"),
+          shadowBlurValue: document.getElementById("shadowBlurValue"),
+          shadowOffsetYRange: document.getElementById("shadowOffsetYRange"),
+          shadowOffsetYInput: document.getElementById("shadowOffsetYInput"),
+          shadowOffsetYValue: document.getElementById("shadowOffsetYValue"),
+          exportSquareSwitch: document.getElementById("exportSquareSwitch"),
+          exportSquareValue: document.getElementById("exportSquareValue"),
+          exportStrategySelect: document.getElementById("exportStrategySelect"),
+          requestText: document.getElementById("requestText"),
+          requestHint: document.getElementById("requestHint"),
+          previewImage: document.getElementById("previewImage"),
+          previewStatus: document.getElementById("previewStatus"),
+          previewTip: document.getElementById("previewTip"),
+          previewInfo: document.getElementById("previewInfo"),
+          previewSize: document.getElementById("previewSize"),
+          previewMode: document.getElementById("previewMode"),
+          copyRequestBtn: document.getElementById("copyRequestBtn"),
+          copyRequestBtn2: document.getElementById("copyRequestBtn2"),
+          copyQueryBtn: document.getElementById("copyQueryBtn"),
+          copyQueryBtn2: document.getElementById("copyQueryBtn2"),
+          uploadZone: document.getElementById("uploadZone"),
+        };
+
+        let previewObjectUrl = "";
+        let previewTimer = 0;
+        let previewToken = 0;
+
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+        const round2 = (value) => Number.parseFloat(Number(value).toFixed(2));
+
+        const formatNumber = (value) => {
+          const normalized = Number(value);
+          return Number.isInteger(normalized) ? String(normalized) : String(round2(normalized));
+        };
+
+        const syncControlValues = () => {
+          els.imageUrl.value = state.imageUrl || "";
+          els.imageUrlState.textContent = state.imageUrl ? "已填写" : "-";
+          els.fileName.textContent = state.fileName || "未选择文件";
+          els.requestMode.textContent = state.file ? "POST" : "GET";
+          els.requestModeInput.value = state.file ? "POST /icon" : "GET /icon";
+          els.iconSizeValue.textContent = String(state.iconSize);
+          els.iconSizeRange.value = state.iconSize;
+          els.iconSizeInput.value = state.iconSize;
+          els.imageScaleValue.textContent = Number(state.imageScale).toFixed(2);
+          els.imageScaleRange.value = state.imageScale;
+          els.imageScaleInput.value = state.imageScale;
+          els.imageOffsetYValue.textContent = String(state.imageOffsetY);
+          els.imageOffsetYRange.value = state.imageOffsetY;
+          els.imageOffsetYInput.value = state.imageOffsetY;
+          els.borderWidthValue.textContent = String(state.borderWidth);
+          els.borderWidthRange.value = state.borderWidth;
+          els.borderWidthInput.value = state.borderWidth;
+          els.lineJoinSelect.value = state.lineJoin;
+          els.borderColor.value = state.borderColor;
+          els.borderColorHex.value = state.borderColor;
+          els.bgColor.value = state.bgColor;
+          els.bgColorHex.value = state.bgColor;
+          els.enableShadowSwitch.classList.toggle("on", !!state.enableShadow);
+          els.enableShadowValue.textContent = state.enableShadow ? "1" : "0";
+          els.shadowBlurValue.textContent = String(state.shadowBlur);
+          els.shadowBlurRange.value = state.shadowBlur;
+          els.shadowBlurInput.value = state.shadowBlur;
+          els.shadowOffsetYValue.textContent = String(state.shadowOffsetY);
+          els.shadowOffsetYRange.value = state.shadowOffsetY;
+          els.shadowOffsetYInput.value = state.shadowOffsetY;
+          els.exportSquareSwitch.classList.toggle("on", !!state.exportSquare);
+          els.exportSquareValue.textContent = state.exportSquare ? "1" : "0";
+          els.exportStrategySelect.value = state.exportStrategy;
+
+          document.querySelectorAll(".shape-card").forEach((card) => {
+            const active = card.dataset.shape === state.shape;
+            card.classList.toggle("active", active);
+            card.setAttribute("aria-pressed", active ? "true" : "false");
+          });
+        };
+
+        const buildQueryParams = () => {
+          const params = new URLSearchParams();
+          params.set("shape", state.shape);
+          params.set("iconSize", String(state.iconSize));
+          params.set("imageScale", String(state.imageScale));
+          params.set("imageOffsetY", String(state.imageOffsetY));
+          params.set("borderWidth", String(state.borderWidth));
+          params.set("lineJoin", state.lineJoin);
+          params.set("borderColor", state.borderColor);
+          params.set("bgColor", state.bgColor);
+          params.set("enableShadow", state.enableShadow ? "1" : "0");
+          params.set("shadowBlur", String(state.shadowBlur));
+          params.set("shadowOffsetY", String(state.shadowOffsetY));
+          params.set("exportSquare", state.exportSquare ? "1" : "0");
+          params.set("exportStrategy", state.exportStrategy);
+          if (state.imageUrl) {
+            params.set("imageUrl", state.imageUrl);
+          }
+          return params;
+        };
+
+        const buildRequestText = () => {
+          const query = buildQueryParams().toString();
+          if (state.file) {
+            const lines = [
+              `curl -X POST "${apiIconUrl}" \\`,
+              `  -F "shape=${state.shape}" \\`,
+              `  -F "iconSize=${state.iconSize}" \\`,
+              `  -F "imageScale=${state.imageScale}" \\`,
+              `  -F "imageOffsetY=${state.imageOffsetY}" \\`,
+              `  -F "borderWidth=${state.borderWidth}" \\`,
+              `  -F "lineJoin=${state.lineJoin}" \\`,
+              `  -F "borderColor=${state.borderColor}" \\`,
+              `  -F "bgColor=${state.bgColor}" \\`,
+              `  -F "enableShadow=${state.enableShadow ? 1 : 0}" \\`,
+              `  -F "shadowBlur=${state.shadowBlur}" \\`,
+              `  -F "shadowOffsetY=${state.shadowOffsetY}" \\`,
+              `  -F "exportSquare=${state.exportSquare ? 1 : 0}" \\`,
+              `  -F "exportStrategy=${state.exportStrategy}" \\`,
+              `  -F "image=@${state.fileName || "image.png"}" \\`,
+              `  -o output.png`,
+            ];
+            return lines.join("\n");
+          }
+          return `${apiIconUrl}?${query}`;
+        };
+
+        const buildPreviewRequest = () => {
+          const query = buildQueryParams().toString();
+          return `${apiIconUrl}?${query}&_=${Date.now()}`;
+        };
+
+        const copyText = async (text) => {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+            return;
+          }
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.inset = "0";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+        };
+
+        const updateRequestBox = () => {
+          els.requestText.value = buildRequestText();
+          els.requestHint.textContent = state.file
+            ? "已选择本地文件，复制内容为 multipart `curl` 请求。"
+            : "当前复制内容为 GET 请求 URL。";
+          els.previewMode.textContent = state.file ? "POST" : "GET";
+        };
+
+        const updatePreviewInfo = async () => {
+          try {
+            const params = buildQueryParams();
+            const infoRes = await fetch(`${apiInfoUrl}?${params.toString()}`, {
+              headers: { Accept: "application/json" },
+            });
+            if (!infoRes.ok) {
+              throw new Error(`info ${infoRes.status}`);
+            }
+            const info = await infoRes.json();
+            els.previewSize.textContent = `${info.width} × ${info.height}`;
+            els.previewInfo.textContent = `shape=${info.state.shape}, scale=${Number(info.scale).toFixed(2)}`;
+          } catch (error) {
+            els.previewSize.textContent = "0 × 0";
+            els.previewInfo.textContent = `info 失败: ${error.message}`;
+          }
+        };
+
+        const updatePreviewImage = async () => {
+          const token = ++previewToken;
+          els.previewStatus.textContent = "加载中";
+          els.previewTip.textContent = state.file ? "POST /icon" : "GET /icon";
+
+          if (previewObjectUrl) {
+            URL.revokeObjectURL(previewObjectUrl);
+            previewObjectUrl = "";
+          }
+
+          try {
+            if (state.file) {
+              const formData = new FormData();
+              formData.set("image", state.file, state.fileName || state.file.name);
+              for (const [key, value] of buildQueryParams().entries()) {
+                formData.set(key, value);
+              }
+              const res = await fetch(apiIconUrl, {
+                method: "POST",
+                body: formData,
+              });
+              if (!res.ok) {
+                throw new Error(`icon ${res.status}`);
+              }
+              const blob = await res.blob();
+              if (token !== previewToken) return;
+              if (previewObjectUrl) {
+                URL.revokeObjectURL(previewObjectUrl);
+              }
+              previewObjectUrl = URL.createObjectURL(blob);
+              els.previewImage.src = previewObjectUrl;
+            } else {
+              els.previewImage.src = buildPreviewRequest();
+            }
+            if (token !== previewToken) return;
+            els.previewStatus.textContent = "已更新";
+            els.previewTip.textContent = state.file ? state.fileName : "imageUrl / query";
+          } catch (error) {
+            if (token !== previewToken) return;
+            els.previewStatus.textContent = "预览失败";
+            els.previewTip.textContent = error.message;
+          }
+        };
+
+        const refreshAll = () => {
+          syncControlValues();
+          updateRequestBox();
+          window.clearTimeout(previewTimer);
+          previewTimer = window.setTimeout(() => {
+            updatePreviewInfo();
+            updatePreviewImage();
+          }, 120);
+        };
+
+        const setState = (patch) => {
+          Object.assign(state, patch);
+          refreshAll();
+        };
+
+        document.getElementById("shapeGrid").addEventListener("click", (event) => {
+          const card = event.target.closest(".shape-card");
+          if (!card) return;
+          setState({ shape: card.dataset.shape });
+        });
+
+        const bindRange = (rangeEl, inputEl, key, mapValue = (value) => value) => {
+          const handler = (rawValue) => {
+            const value = mapValue(rawValue);
+            setState({ [key]: value });
+          };
+          rangeEl.addEventListener("input", (event) => handler(event.target.value));
+          inputEl.addEventListener("input", (event) => handler(event.target.value));
+        };
+
+        bindRange(els.iconSizeRange, els.iconSizeInput, "iconSize", (value) => clamp(parseInt(value || "128", 10), 1, 2048));
+        bindRange(els.imageScaleRange, els.imageScaleInput, "imageScale", (value) => clamp(Number.parseFloat(value || "1"), 0.01, 10));
+        bindRange(els.imageOffsetYRange, els.imageOffsetYInput, "imageOffsetY", (value) => clamp(parseInt(value || "0", 10), -50, 50));
+        bindRange(els.borderWidthRange, els.borderWidthInput, "borderWidth", (value) => clamp(parseInt(value || "0", 10), 0, 20));
+        bindRange(els.shadowBlurRange, els.shadowBlurInput, "shadowBlur", (value) => clamp(parseInt(value || "0", 10), 0, 50));
+        bindRange(els.shadowOffsetYRange, els.shadowOffsetYInput, "shadowOffsetY", (value) => clamp(parseInt(value || "0", 10), -20, 20));
+
+        els.lineJoinSelect.addEventListener("change", (event) => setState({ lineJoin: event.target.value }));
+        els.borderColor.addEventListener("input", (event) => setState({ borderColor: event.target.value }));
+        els.borderColorHex.addEventListener("input", (event) => setState({ borderColor: event.target.value.trim() }));
+        els.bgColor.addEventListener("input", (event) => setState({ bgColor: event.target.value }));
+        els.bgColorHex.addEventListener("input", (event) => setState({ bgColor: event.target.value.trim() }));
+        els.exportStrategySelect.addEventListener("change", (event) => setState({ exportStrategy: event.target.value }));
+
+        els.enableShadowSwitch.addEventListener("click", () => setState({ enableShadow: !state.enableShadow }));
+        els.exportSquareSwitch.addEventListener("click", () => setState({ exportSquare: !state.exportSquare }));
+
+        els.imageUrl.addEventListener("input", (event) => {
+          const nextImageUrl = event.target.value.trim();
+          setState({ imageUrl: nextImageUrl });
+        });
+
+        els.imageUpload.addEventListener("change", (event) => {
+          const file = event.target.files && event.target.files[0];
+          if (!file) return;
+          setState({ file, fileName: file.name });
+        });
+
+        els.uploadZone.addEventListener("dragover", (event) => {
+          event.preventDefault();
+          els.uploadZone.classList.add("drag");
+        });
+
+        els.uploadZone.addEventListener("dragleave", () => {
+          els.uploadZone.classList.remove("drag");
+        });
+
+        els.uploadZone.addEventListener("drop", (event) => {
+          event.preventDefault();
+          els.uploadZone.classList.remove("drag");
+          const file = event.dataTransfer.files && event.dataTransfer.files[0];
+          if (!file) return;
+          setState({ file, fileName: file.name });
+        });
+
+        const copyCurrentRequest = async () => {
+          await copyText(els.requestText.value);
+          els.previewStatus.textContent = "已复制";
+          els.previewTip.textContent = "请求文本已复制到剪贴板";
+        };
+
+        const copyCurrentQuery = async () => {
+          await copyText(buildQueryParams().toString());
+          els.previewStatus.textContent = "已复制";
+          els.previewTip.textContent = "查询串已复制到剪贴板";
+        };
+
+        els.copyRequestBtn.addEventListener("click", copyCurrentRequest);
+        els.copyRequestBtn2.addEventListener("click", copyCurrentRequest);
+        els.copyQueryBtn.addEventListener("click", copyCurrentQuery);
+        els.copyQueryBtn2.addEventListener("click", copyCurrentQuery);
+
+        syncControlValues();
+        refreshAll();
+      })();

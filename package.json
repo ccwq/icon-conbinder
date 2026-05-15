@@ -1,0 +1,17 @@
+{
+  "name": "pin-icon-server",
+  "version": "1.0.0",
+  "description": "RESTful API for Pin Icon Generator, pixel-identical to the HTML version",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test __test__/*.test.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.68",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "pug": "^3.0.4"
+  }
+}

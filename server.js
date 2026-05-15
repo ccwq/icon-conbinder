@@ -1,0 +1,459 @@
+/**
+ * Pin Icon Generator — Node.js REST API
+ *
+ * 完整移植自 HTML 版本的 Canvas 渲染逻辑，保证与浏览器端输出一致。
+ *
+ * GET /icon
+ * 所有参数均为查询字符串，与 HTML 中的 state 字段一一对应：
+ *
+ * shape          {string}  pin|circle|square|squircle|hexagon  (default: pin)
+ * iconSize       {number}  形状高度 px (default: 128)
+ * imageScale     {number}  内部图片缩放 (default: 1.0)
+ * imageOffsetY   {number}  垂直偏移 -50~50 (default: 0)
+ * borderWidth    {number}  边框宽度 (default: 4)
+ * lineJoin       {string}  round|miter|bevel (default: round)
+ * borderColor    {string}  #rrggbb (default: #ef4444)
+ * bgColor        {string}  #rrggbb (default: #ffffff)
+ * enableShadow   {0|1}     (default: 1)
+ * shadowBlur     {number}  (default: 10)
+ * shadowOffsetY  {number}  (default: 5)
+ * exportSquare   {0|1}     (default: 1)
+ * exportStrategy {string}  center|bottom (default: center)
+ * imageUrl       {string}  可选，图片 URL（需可公网访问）
+ *
+ * POST /icon
+ * Body: multipart/form-data，字段同上，图片通过 image 字段上传二进制。
+ */
+
+"use strict";
+
+const express = require("express");
+const { createCanvas, loadImage } = require("@napi-rs/canvas");
+const multer = require("multer");
+const https = require("https");
+const http = require("http");
+const path = require("path");
+const { URL } = require("url");
+
+const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "pug");
+
+// ─── 形状定义（与 HTML 完全相同）──────────────────────────────────────────────
+
+const SHAPES = {
+  pin: {
+    path: "M 12 2 C 8.13 2 5 5.13 5 9 C 5 14.25 12 22 12 22 S 19 14.25 19 9 C 19 5.13 15.87 2 12 2 Z",
+    width: 14,
+    height: 20,
+    imageCenterY: 9,
+    innerRadius: 7,
+  },
+  circle: {
+    path: "M 22 12 A 10 10 0 1 1 2 12 A 10 10 0 1 1 22 12 Z",
+    width: 20,
+    height: 20,
+    imageCenterY: 12,
+    innerRadius: 10,
+  },
+  square: {
+    path: "M 2 2 L 22 2 L 22 22 L 2 22 Z",
+    width: 20,
+    height: 20,
+    imageCenterY: 12,
+    innerRadius: 10,
+  },
+  squircle: {
+    path: "M 6 2 L 18 2 A 4 4 0 0 1 22 6 L 22 18 A 4 4 0 0 1 18 22 L 6 22 A 4 4 0 0 1 2 18 L 2 6 A 4 4 0 0 1 6 2 Z",
+    width: 20,
+    height: 20,
+    imageCenterY: 12,
+    innerRadius: 10,
+  },
+  hexagon: {
+    path: "M 12 2 L 20.66 7 L 20.66 17 L 12 22 L 3.34 17 L 3.34 7 Z",
+    width: 17.32,
+    height: 20,
+    imageCenterY: 12,
+    innerRadius: 8.66,
+  },
+};
+
+const SHAPE_BOUNDS = {
+  pin: { minX: 5, minY: 2, maxX: 19, maxY: 22 },
+  circle: { minX: 2, minY: 2, maxX: 22, maxY: 22 },
+  square: { minX: 2, minY: 2, maxX: 22, maxY: 22 },
+  squircle: { minX: 2, minY: 2, maxX: 22, maxY: 22 },
+  hexagon: { minX: 3.34, minY: 2, maxX: 20.66, maxY: 22 },
+};
+
+const SHAPE_OPTIONS = Object.entries(SHAPES).map(([value, shape]) => ({
+  value,
+  label: value,
+  path: shape.path,
+}));
+
+// ─── 参数解析与默认值 ──────────────────────────────────────────────────────────
+
+function parseState(query) {
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const float = (v, def) => {
+    const n = parseFloat(v);
+    return isNaN(n) ? def : n;
+  };
+  const int = (v, def) => {
+    const n = parseInt(v, 10);
+    return isNaN(n) ? def : n;
+  };
+  const bool = (v, def) => (v === undefined ? def : v !== "0" && v !== "false");
+  const oneOf = (v, opts, def) => (opts.includes(v) ? v : def);
+
+  return {
+    shape: oneOf(query.shape, Object.keys(SHAPES), "pin"),
+    iconSize: clamp(int(query.iconSize, 128), 1, 2048),
+    imageScale: clamp(float(query.imageScale, 1.0), 0.01, 10),
+    imageOffsetY: clamp(float(query.imageOffsetY, 0), -50, 50),
+    borderWidth: clamp(float(query.borderWidth, 4), 0, 20),
+    lineJoin: oneOf(query.lineJoin, ["round", "miter", "bevel"], "round"),
+    borderColor: /^#[0-9a-fA-F]{6}$/.test(query.borderColor)
+      ? query.borderColor
+      : "#ef4444",
+    bgColor: /^#[0-9a-fA-F]{6}$/.test(query.bgColor)
+      ? query.bgColor
+      : "#ffffff",
+    enableShadow: bool(query.enableShadow, true),
+    shadowBlur: clamp(float(query.shadowBlur, 10), 0, 50),
+    shadowOffsetY: clamp(float(query.shadowOffsetY, 5), -20, 20),
+    exportSquare: bool(query.exportSquare, true),
+    exportStrategy: oneOf(query.exportStrategy, ["center", "bottom"], "center"),
+    imageUrl: query.imageUrl || null,
+  };
+}
+
+// ─── 布局计算（与 HTML getLayout() 完全相同）──────────────────────────────────
+
+function getLayout(state) {
+  const shape = SHAPES[state.shape];
+  const bounds = SHAPE_BOUNDS[state.shape];
+  const bboxWidth = bounds.maxX - bounds.minX;
+  const bboxHeight = bounds.maxY - bounds.minY;
+  const scale = state.iconSize / bboxHeight;
+  const shapeWidth = bboxWidth * scale;
+  const shapeHeight = bboxHeight * scale;
+  const strokePad = Math.max(0, state.borderWidth);
+  const shadowSpread = state.enableShadow
+    ? Math.max(0, Math.ceil(state.shadowBlur * 1.5))
+    : 0;
+  const shadowOffsetX = 0;
+  const shadowOffsetY = state.enableShadow
+    ? Math.round(state.shadowOffsetY)
+    : 0;
+  const shadowExtraLeft = shadowSpread + Math.max(0, -shadowOffsetX);
+  const shadowExtraRight = shadowSpread + Math.max(0, shadowOffsetX);
+  const shadowExtraTop = shadowSpread + Math.max(0, -shadowOffsetY);
+  const shadowExtraBottom = shadowSpread + Math.max(0, shadowOffsetY);
+  const leftPad = Math.ceil(strokePad + shadowExtraLeft);
+  const rightPad = Math.ceil(strokePad + shadowExtraRight);
+  const topPad = Math.ceil(strokePad + shadowExtraTop);
+  const bottomPad = Math.ceil(strokePad + shadowExtraBottom);
+
+  const rectWidth = Math.ceil(shapeWidth + leftPad + rightPad);
+  const rectHeight = Math.ceil(shapeHeight + topPad + bottomPad);
+  const squareSize = Math.max(rectWidth, rectHeight);
+  const width = state.exportSquare ? squareSize : rectWidth;
+  const height = state.exportSquare ? squareSize : rectHeight;
+
+  return {
+    shape,
+    bounds,
+    scale,
+    centerX: (bounds.minX + bounds.maxX) / 2,
+    centerY: (bounds.minY + bounds.maxY) / 2,
+    width,
+    height,
+    shapeWidth,
+    shapeHeight,
+    leftPad,
+    rightPad,
+    topPad,
+    bottomPad,
+    squareSize,
+    shadowSpread,
+    shadowOffsetX,
+    shadowOffsetY,
+  };
+}
+
+// ─── 内圆计算（与 HTML getInnerCircle() 完全相同）────────────────────────────
+
+function getInnerCircle(shapeKey, width, height) {
+  switch (shapeKey) {
+    case "pin": {
+      const r = width * 0.46;
+      const topCY = r + height * 0.04;
+      return { cx: width / 2, cy: topCY, r: r * 0.65 };
+    }
+    case "circle":
+      return { cx: width / 2, cy: height * 0.4, r: width * 0.32 };
+    case "squircle":
+      return { cx: width / 2, cy: height * 0.41, r: width * 0.28 };
+    case "square":
+      return { cx: width / 2, cy: height * 0.42, r: width * 0.28 };
+    case "hexagon":
+      return { cx: width / 2, cy: height * 0.4, r: width * 0.27 };
+    default:
+      return { cx: width / 2, cy: height * 0.4, r: width * 0.3 };
+  }
+}
+
+// ─── 核心渲染（移植自 HTML drawPin()）────────────────────────────────────────
+
+function drawPin(state, userImage) {
+  const layout = getLayout(state);
+  const { shape, scale, bounds, centerX, centerY, width, height } = layout;
+
+  const canvas = createCanvas(width, height);
+  const g = canvas.getContext("2d");
+
+  g.clearRect(0, 0, width, height);
+
+  // 用 Path2D 绘制形状路径（@napi-rs/canvas 支持 Path2D + SVG path string）
+  const path = new (require("@napi-rs/canvas").Path2D)(shape.path);
+
+  const shadowAlpha = 0.38; // 与 HTML forExport=true 保持一致
+  const shapePixelHeight = (bounds.maxY - bounds.minY) * scale;
+  const alignShiftY =
+    state.exportStrategy === "bottom"
+      ? Math.max(0, (height - state.iconSize) / 2 - layout.bottomPad * 0.15)
+      : 0;
+
+  const shapeAxisX = width / 2;
+  const shapeAxisY = height / 2 + alignShiftY;
+  const shadowX = layout.shadowOffsetX;
+  const shadowY = layout.shadowOffsetY + shapePixelHeight * 0.08;
+
+  // 1. 独立阴影层（与 HTML 完全相同的策略：先画阴影再画主体）
+  if (state.enableShadow) {
+    g.save();
+    g.translate(shapeAxisX + shadowX, shapeAxisY + shadowY);
+    g.scale(scale, scale);
+    g.translate(-centerX, -centerY);
+    g.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+    if (layout.shadowSpread > 0) {
+      g.filter = `blur(${layout.shadowSpread}px)`;
+    }
+    g.fill(path);
+    g.filter = "none";
+    g.restore();
+  }
+
+  // 2. 主体形状（填充 + 内描边）
+  g.save();
+  g.translate(shapeAxisX, shapeAxisY);
+  g.scale(scale, scale);
+  g.translate(-centerX, -centerY);
+  g.fillStyle = state.bgColor;
+  g.fill(path);
+
+  if (state.borderWidth > 0) {
+    g.save();
+    g.clip(path);
+    g.lineWidth = (state.borderWidth * 2) / scale;
+    g.strokeStyle = state.borderColor;
+    g.lineJoin = state.lineJoin;
+    g.stroke(path);
+    g.restore();
+  }
+  g.restore();
+
+  // 3. 内部图片
+  if (userImage) {
+    const inner = getInnerCircle(state.shape, width, height);
+    const img = userImage;
+    const drawWidth = img.width * state.imageScale;
+    const drawHeight = img.height * state.imageScale;
+    const imageAreaCenterX = width / 2;
+    const imageAreaCenterY =
+      shapeAxisY + (shape.imageCenterY - centerY) * scale;
+    const radius = inner.r * scale; // note: inner.r is already in canvas px based on width/height
+    const innerRadius = radius - state.borderWidth;
+    const yOffsetPixel = innerRadius * (state.imageOffsetY / 100);
+
+    g.save();
+    g.translate(shapeAxisX, shapeAxisY);
+    g.scale(scale, scale);
+    g.translate(-centerX, -centerY);
+    g.clip(path);
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.drawImage(
+      img,
+      imageAreaCenterX - drawWidth / 2,
+      imageAreaCenterY - drawHeight / 2 + yOffsetPixel,
+      drawWidth,
+      drawHeight
+    );
+    g.restore();
+  }
+
+  return canvas;
+}
+
+// ─── 图片加载工具 ──────────────────────────────────────────────────────────────
+
+async function loadImageFromBuffer(buffer) {
+  return await loadImage(buffer);
+}
+
+async function loadImageFromUrl(url) {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const lib = parsed.protocol === "https:" ? https : http;
+    lib.get(url, (res) => {
+      const chunks = [];
+      res.on("data", (c) => chunks.push(c));
+      res.on("end", async () => {
+        try {
+          const buf = Buffer.concat(chunks);
+          resolve(await loadImage(buf));
+        } catch (e) {
+          reject(e);
+        }
+      });
+      res.on("error", reject);
+    }).on("error", reject);
+  });
+}
+
+// ─── 路由 ─────────────────────────────────────────────────────────────────────
+
+/**
+ * GET /icon?shape=pin&iconSize=128&...&imageUrl=https://...
+ */
+app.get("/icon", async (req, res) => {
+  try {
+    const state = parseState(req.query);
+    let userImage = null;
+
+    if (state.imageUrl) {
+      userImage = await loadImageFromUrl(state.imageUrl);
+    }
+
+    const canvas = drawPin(state, userImage);
+    const buffer = canvas.toBuffer("image/png");
+
+    res.set({
+      "Content-Type": "image/png",
+      "Content-Length": buffer.length,
+      "X-Icon-Width": canvas.width,
+      "X-Icon-Height": canvas.height,
+      "Cache-Control": "no-cache",
+    });
+    res.send(buffer);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /ui.html — 基于 pug 的服务端模板页
+ */
+app.get("/ui.html", (req, res) => {
+  try {
+    const state = parseState(req.query);
+    res.render("ui", {
+      title: "Pin Icon UI",
+      apiBaseUrl: `${req.protocol}://${req.get("host")}`,
+      apiIconPath: "/icon",
+      apiInfoPath: "/info",
+      state,
+      shapeOptions: SHAPE_OPTIONS,
+      pageDataJson: JSON.stringify({
+        apiBaseUrl: `${req.protocol}://${req.get("host")}`,
+        apiIconPath: "/icon",
+        apiInfoPath: "/info",
+        state,
+      }),
+    });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+/**
+ * POST /icon — multipart/form-data
+ * 字段与 GET 参数相同，图片通过 image 字段上传
+ */
+app.post("/icon", upload.single("image"), async (req, res) => {
+  try {
+    const state = parseState({ ...req.query, ...req.body });
+    let userImage = null;
+
+    if (req.file) {
+      userImage = await loadImageFromBuffer(req.file.buffer);
+    } else if (state.imageUrl) {
+      userImage = await loadImageFromUrl(state.imageUrl);
+    }
+
+    const canvas = drawPin(state, userImage);
+    const buffer = canvas.toBuffer("image/png");
+
+    res.set({
+      "Content-Type": "image/png",
+      "Content-Length": buffer.length,
+      "X-Icon-Width": canvas.width,
+      "X-Icon-Height": canvas.height,
+      "Cache-Control": "no-cache",
+    });
+    res.send(buffer);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /info — 返回当前参数的布局尺寸信息（不渲染图片）
+ */
+app.get("/info", (req, res) => {
+  try {
+    const state = parseState(req.query);
+    const layout = getLayout(state);
+    res.json({
+      state,
+      width: layout.width,
+      height: layout.height,
+      shapeWidth: Math.round(layout.shapeWidth),
+      shapeHeight: Math.round(layout.shapeHeight),
+      scale: layout.scale,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── 启动 ──────────────────────────────────────────────────────────────────────
+
+const PORT = process.env.PORT || 3000;
+
+function startServer(port = PORT) {
+  return app.listen(port, () => {
+    console.log(`Pin Icon Server listening on http://localhost:${port}`);
+    console.log(`  GET  /ui.html`);
+    console.log(`  GET  /icon?shape=pin&iconSize=128&borderColor=%23ef4444`);
+    console.log(`  POST /icon  (multipart/form-data, image field)`);
+    console.log(`  GET  /info?shape=pin&iconSize=128`);
+  });
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = {
+  app,
+  startServer,
+  parseState,
+  getLayout,
+};

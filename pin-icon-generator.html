@@ -1,909 +1,1652 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pin Icon Generator</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&display=swap');
-
-  :root {
-    --bg: #0e0e10;
-    --surface: #18181c;
-    --surface2: #22222a;
-    --border: #2e2e3a;
-    --accent: #f5c842;
-    --accent2: #ff6b6b;
-    --text: #e8e8f0;
-    --text-muted: #6b6b80;
-    --radius: 12px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 18px 32px;
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-  }
-
-  header h1 {
-    font-family: 'Fraunces', serif;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: -0.02em;
-  }
-
-  header span {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .app {
-    display: flex;
-    flex: 1;
-    gap: 0;
-  }
-
-  /* LEFT PANEL */
-  .panel {
-    width: 340px;
-    min-width: 300px;
-    border-right: 1px solid var(--border);
-    padding: 24px 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .section {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .section-title {
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  label {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  label span.val {
-    color: var(--accent);
-    font-size: 0.72rem;
-  }
-
-  input[type=range] {
-    width: 100%;
-    height: 3px;
-    appearance: none;
-    background: var(--border);
-    border-radius: 2px;
-    outline: none;
-    cursor: pointer;
-    margin-top: 4px;
-  }
-
-  input[type=range]::-webkit-slider-thumb {
-    appearance: none;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--accent);
-    cursor: pointer;
-    box-shadow: 0 0 0 3px rgba(245,200,66,0.15);
-  }
-
-  .color-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  input[type=color] {
-    width: 36px;
-    height: 28px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    border-radius: 6px;
-    overflow: hidden;
-    padding: 0;
-    flex-shrink: 0;
-  }
-
-  .color-label {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    flex: 1;
-  }
-
-  input[type=checkbox] {
-    accent-color: var(--accent);
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-  }
-
-  /* Upload zone */
-  .upload-zone {
-    border: 1.5px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    position: relative;
-    background: var(--surface);
-  }
-
-  .upload-zone:hover, .upload-zone.drag {
-    border-color: var(--accent);
-    background: rgba(245,200,66,0.04);
-  }
-
-  .upload-zone input[type=file] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-
-  .upload-zone .up-icon {
-    font-size: 1.6rem;
-    margin-bottom: 6px;
-    display: block;
-  }
-
-  .upload-zone p {
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-  }
-
-  .upload-zone .filename {
-    color: var(--accent);
-    margin-top: 6px;
-    font-size: 0.7rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* Shape presets */
-  .presets {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .preset-btn {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .preset-btn:hover, .preset-btn.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(245,200,66,0.06);
-  }
-
-  /* Select */
-  select {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    padding: 6px 10px;
-    cursor: pointer;
-    outline: none;
-    width: 100%;
-    appearance: none;
-  }
-
-  /* Download btn */
-  .dl-btn {
-    width: 100%;
-    background: var(--accent);
-    color: #0e0e10;
-    border: none;
-    border-radius: var(--radius);
-    padding: 12px;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.78rem;
-    font-weight: 500;
-    cursor: pointer;
-    letter-spacing: 0.05em;
-    transition: opacity 0.15s, transform 0.1s;
-    margin-top: auto;
-  }
-
-  .dl-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-  .dl-btn:active { transform: translateY(0); }
-
-  /* PREVIEW */
-  .preview-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
-    padding: 40px;
-    background:
-      radial-gradient(circle at 20% 20%, rgba(245,200,66,0.04) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(255,107,107,0.03) 0%, transparent 50%);
-    position: relative;
-  }
-
-  .preview-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    position: absolute;
-    top: 20px;
-    left: 24px;
-  }
-
-  .preview-bg-toggle {
-    position: absolute;
-    top: 16px;
-    right: 24px;
-    display: flex;
-    gap: 6px;
-  }
-
-  .bg-btn {
-    width: 24px; height: 24px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-
-  .bg-btn.active { border-color: var(--accent); }
-  .bg-btn.dark { background: #111; }
-  .bg-btn.light { background: #f0f0f0; }
-  .bg-btn.checker {
-    background-image:
-      linear-gradient(45deg, #888 25%, transparent 25%),
-      linear-gradient(-45deg, #888 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #888 75%),
-      linear-gradient(-45deg, transparent 75%, #888 75%);
-    background-size: 8px 8px;
-    background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
-  }
-
-  #preview-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 20px;
-    padding: 40px;
-    transition: background 0.3s;
-  }
-
-  #preview-canvas {
-    display: block;
-    /* canvas itself */
-  }
-
-  .size-badges {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .size-badge {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 0.65rem;
-    color: var(--text-muted);
-  }
-
-  .size-badge.active-size {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  /* toggle */
-  .toggle-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 0.72rem;
-    color: var(--text-muted);
-  }
-
-  .toggle {
-    width: 34px; height: 18px;
-    border-radius: 9px;
-    background: var(--border);
-    position: relative;
-    cursor: pointer;
-    transition: background 0.2s;
-    flex-shrink: 0;
-  }
-
-  .toggle.on { background: var(--accent); }
-
-  .toggle::after {
-    content: '';
-    position: absolute;
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    background: white;
-    top: 3px; left: 3px;
-    transition: left 0.2s;
-  }
-
-  .toggle.on::after { left: 19px; }
-
-  .row2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .num-input {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    padding: 5px 8px;
-    outline: none;
-    width: 100%;
-    transition: border-color 0.15s;
-  }
-
-  .num-input:focus { border-color: var(--accent); }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-</style>
-</head>
-<body>
-
-<header>
-  <h1>Pin Icon Generator</h1>
-  <span>水滴地图图标生成器</span>
-</header>
-
-<div class="app">
-  <!-- LEFT CONTROLS -->
-  <div class="panel">
-
-    <!-- Shape -->
-    <div class="section">
-      <div class="section-title">Shape / 形状</div>
-      <div class="presets" id="shapePresets">
-        <button class="preset-btn active" data-shape="teardrop">水滴</button>
-        <button class="preset-btn" data-shape="circle">圆形</button>
-        <button class="preset-btn" data-shape="rounded">圆角方</button>
-        <button class="preset-btn" data-shape="shield">盾牌</button>
-        <button class="preset-btn" data-shape="balloon">气泡</button>
-      </div>
-    </div>
-
-    <!-- Image Upload -->
-    <div class="section">
-      <div class="section-title">Inner Image / 内部图像</div>
-      <div class="upload-zone" id="uploadZone">
-        <input type="file" id="imgInput" accept="image/*">
-        <span class="up-icon">⬆</span>
-        <p>拖拽或点击上传图像<br>支持 PNG / JPG / SVG / WebP</p>
-        <div class="filename" id="filename"></div>
-      </div>
-      <div>
-        <label>图像缩放 <span class="val" id="imgScaleVal">80%</span></label>
-        <input type="range" id="imgScale" min="20" max="100" value="80">
-      </div>
-      <div>
-        <label>图像垂直偏移 <span class="val" id="imgOffsetVal">0px</span></label>
-        <input type="range" id="imgOffset" min="-40" max="40" value="0">
-      </div>
-    </div>
-
-    <!-- Colors -->
-    <div class="section">
-      <div class="section-title">Colors / 颜色</div>
-      <div class="color-row">
-        <input type="color" id="pinColor" value="#e74c3c">
-        <span class="color-label">Pin 填充色</span>
-      </div>
-      <div class="color-row">
-        <input type="color" id="pin2Color" value="#c0392b">
-        <span class="color-label">渐变辅助色</span>
-      </div>
-      <div class="toggle-row">
-        <span>启用渐变</span>
-        <div class="toggle on" id="gradToggle"></div>
-      </div>
-      <div class="color-row">
-        <input type="color" id="strokeColor" value="#ffffff">
-        <span class="color-label">边框颜色</span>
-      </div>
-      <div>
-        <label>边框宽度 <span class="val" id="strokeWidthVal">3px</span></label>
-        <input type="range" id="strokeWidth" min="0" max="20" value="3">
-      </div>
-      <div class="toggle-row">
-        <span>内圆 / 图像区域背景</span>
-        <div class="toggle on" id="innerBgToggle"></div>
-      </div>
-      <div class="color-row">
-        <input type="color" id="innerBgColor" value="#ffffff">
-        <span class="color-label">图像区背景色</span>
-      </div>
-    </div>
-
-    <!-- Shadow -->
-    <div class="section">
-      <div class="section-title">Shadow / 阴影</div>
-      <div class="toggle-row">
-        <span>启用阴影</span>
-        <div class="toggle on" id="shadowToggle"></div>
-      </div>
-      <div>
-        <label>阴影模糊 <span class="val" id="shadowBlurVal">16px</span></label>
-        <input type="range" id="shadowBlur" min="0" max="60" value="16">
-      </div>
-      <div>
-        <label>阴影偏移Y <span class="val" id="shadowOffsetVal">6px</span></label>
-        <input type="range" id="shadowOffset" min="0" max="30" value="6">
-      </div>
-      <div>
-        <label>阴影透明度 <span class="val" id="shadowAlphaVal">50%</span></label>
-        <input type="range" id="shadowAlpha" min="0" max="100" value="50">
-      </div>
-      <div class="color-row">
-        <input type="color" id="shadowColor" value="#000000">
-        <span class="color-label">阴影颜色</span>
-      </div>
-    </div>
-
-    <!-- Size -->
-    <div class="section">
-      <div class="section-title">Export Size / 导出尺寸</div>
-      <div class="row2">
-        <div class="input-group">
-          <label>宽度(px)</label>
-          <input class="num-input" type="number" id="exportW" value="128" min="32" max="1024">
-        </div>
-        <div class="input-group">
-          <label>高度(px)</label>
-          <input class="num-input" type="number" id="exportH" value="160" min="32" max="1024">
-        </div>
-      </div>
-      <div class="size-badges" id="sizeBadges">
-        <div class="size-badge active-size" data-w="64" data-h="80">64×80</div>
-        <div class="size-badge active-size" data-w="128" data-h="160">128×160</div>
-        <div class="size-badge" data-w="256" data-h="320">256×320</div>
-        <div class="size-badge" data-w="512" data-h="640">512×640</div>
-      </div>
-    </div>
-
-    <button class="dl-btn" id="dlBtn">⬇ 下载 PNG（含透明通道）</button>
-  </div>
-
-  <!-- PREVIEW -->
-  <div class="preview-area">
-    <span class="preview-label">Preview / 预览</span>
-    <div class="preview-bg-toggle">
-      <div class="bg-btn dark active" data-bg="dark" title="深色背景"></div>
-      <div class="bg-btn light" data-bg="light" title="浅色背景"></div>
-      <div class="bg-btn checker" data-bg="checker" title="透明棋盘"></div>
-    </div>
-    <div id="preview-wrap">
-      <canvas id="preview-canvas" width="200" height="250"></canvas>
-    </div>
-    <div id="dimInfo" style="font-size:0.65rem;color:var(--text-muted)">预览: 200×250</div>
-  </div>
-</div>
-
-<script>
-// ========== STATE ==========
-const state = {
-  shape: 'teardrop',
-  userImage: null,
-  imgScale: 80,
-  imgOffset: 0,
-  pinColor: '#e74c3c',
-  pin2Color: '#c0392b',
-  gradEnabled: true,
-  strokeColor: '#ffffff',
-  strokeWidth: 3,
-  innerBgEnabled: true,
-  innerBgColor: '#ffffff',
-  shadowEnabled: true,
-  shadowBlur: 16,
-  shadowOffset: 6,
-  shadowAlpha: 50,
-  shadowColor: '#000000',
-  exportW: 128,
-  exportH: 160,
-};
-
-// ========== SHAPE PATHS (normalized 0..1 viewBox) ==========
-const SHAPES = {
-  teardrop: (w, h) => {
-    // Classic map pin: teardrop, tip at bottom center
-    const cx = w / 2, bodyH = h * 0.72, r = w * 0.46;
-    const tipY = h * 0.96;
-    return buildTeardropPath(cx, r, bodyH, tipY, h);
-  },
-  circle: (w, h) => {
-    const cx = w/2, cy = h*0.4, r = w*0.42;
-    return `M ${cx-r} ${cy} A ${r} ${r} 0 1 1 ${cx+r} ${cy} A ${r} ${r} 0 1 1 ${cx-r} ${cy} Z`;
-  },
-  rounded: (w, h) => {
-    const m = w*0.08, r2 = w*0.18;
-    const x1=m, y1=h*0.06, x2=w-m, y2=h*0.76;
-    return `M ${x1+r2} ${y1} L ${x2-r2} ${y1} Q ${x2} ${y1} ${x2} ${y1+r2} L ${x2} ${y2-r2} Q ${x2} ${y2} ${x2-r2} ${y2} L ${w/2+w*0.04} ${y2} L ${w/2} ${h*0.96} L ${w/2-w*0.04} ${y2} L ${x1+r2} ${y2} Q ${x1} ${y2} ${x1} ${y2-r2} L ${x1} ${y1+r2} Q ${x1} ${y1} ${x1+r2} ${y1} Z`;
-  },
-  shield: (w, h) => {
-    const cx=w/2, t=h*0.06, m=w*0.08;
-    return `M ${cx} ${t} L ${w-m} ${t+h*0.1} L ${w-m} ${h*0.55} Q ${w-m} ${h*0.75} ${cx} ${h*0.95} Q ${m} ${h*0.75} ${m} ${h*0.55} L ${m} ${t+h*0.1} Z`;
-  },
-  balloon: (w, h) => {
-    const cx=w/2, cy=h*0.38, r=w*0.44;
-    const tailW=w*0.07, tipY=h*0.96;
-    return `M ${cx-r} ${cy} A ${r} ${r} 0 1 1 ${cx+r} ${cy} A ${r} ${r} 0 0 1 ${cx+tailW} ${cy+r*0.3} L ${cx} ${tipY} L ${cx-tailW} ${cy+r*0.3} A ${r} ${r} 0 0 1 ${cx-r} ${cy} Z`;
-  }
-};
-
-function buildTeardropPath(cx, r, bodyH, tipY, h) {
-  // top arc center at (cx, r+h*0.04)
-  const topCY = r + h * 0.04;
-  return `M ${cx} ${tipY} C ${cx - r*0.3} ${tipY - h*0.12} ${cx - r} ${topCY + r*0.5} ${cx - r} ${topCY} A ${r} ${r} 0 1 1 ${cx + r} ${topCY} C ${cx + r} ${topCY + r*0.5} ${cx + r*0.3} ${tipY - h*0.12} ${cx} ${tipY} Z`;
-}
-
-// ========== RENDER ==========
-function hexToRgb(hex) {
-  const r = parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
-  return {r,g,b};
-}
-
-function drawPin(canvas, w, h, forExport=false) {
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, w, h);
-
-  const pathStr = SHAPES[state.shape](w, h);
-  const path = new Path2D(pathStr);
-
-  // shadow
-  if (state.shadowEnabled && !forExport) {
-    ctx.save();
-    const sc = hexToRgb(state.shadowColor);
-    ctx.shadowColor = `rgba(${sc.r},${sc.g},${sc.b},${state.shadowAlpha/100})`;
-    ctx.shadowBlur = state.shadowBlur * (w/128);
-    ctx.shadowOffsetY = state.shadowOffset * (w/128);
-    ctx.fillStyle = 'rgba(0,0,0,0.001)';
-    ctx.fill(path);
-    ctx.restore();
-  }
-
-  // For export with shadow: draw to offscreen first then composite
-  if (state.shadowEnabled && forExport) {
-    // Draw shadow pass
-    ctx.save();
-    const sc = hexToRgb(state.shadowColor);
-    ctx.shadowColor = `rgba(${sc.r},${sc.g},${sc.b},${state.shadowAlpha/100})`;
-    ctx.shadowBlur = state.shadowBlur * (w/128);
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = state.shadowOffset * (w/128);
-    ctx.fillStyle = state.pinColor;
-    ctx.fill(path);
-    ctx.restore();
-  }
-
-  // gradient or solid fill
-  let fillStyle;
-  if (state.gradEnabled) {
-    const grd = ctx.createLinearGradient(0, 0, w * 0.3, h * 0.9);
-    grd.addColorStop(0, state.pinColor);
-    grd.addColorStop(1, state.pin2Color);
-    fillStyle = grd;
-  } else {
-    fillStyle = state.pinColor;
-  }
-
-  ctx.save();
-  ctx.fillStyle = fillStyle;
-  ctx.fill(path);
-  ctx.restore();
-
-  // stroke
-  if (state.strokeWidth > 0) {
-    ctx.save();
-    ctx.strokeStyle = state.strokeColor;
-    ctx.lineWidth = state.strokeWidth * (w/128);
-    ctx.lineJoin = 'round';
-    ctx.stroke(path);
-    ctx.restore();
-  }
-
-  // clip inner circle for image
-  const innerR = getInnerCircle(w, h);
-  const icx = innerR.cx, icy = innerR.cy, ir = innerR.r;
-
-  if (state.innerBgEnabled) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(icx, icy, ir, 0, Math.PI*2);
-    ctx.clip();
-    ctx.fillStyle = state.innerBgColor;
-    ctx.fill();
-    ctx.restore();
-  }
-
-  // draw user image inside circle
-  if (state.userImage) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(icx, icy, ir * 0.97, 0, Math.PI*2);
-    ctx.clip();
-
-    const scale = state.imgScale / 100;
-    const iw = ir * 2 * scale;
-    const ih = ir * 2 * scale;
-    const ix = icx - iw/2;
-    const iy = icy - ih/2 + state.imgOffset * (w/128);
-    ctx.drawImage(state.userImage, ix, iy, iw, ih);
-    ctx.restore();
-  }
-}
-
-function getInnerCircle(w, h) {
-  // different shapes have different center/radius for inner image area
-  switch(state.shape) {
-    case 'teardrop': {
-      const r = w*0.46;
-      const topCY = r + h*0.04;
-      return { cx: w/2, cy: topCY, r: r * 0.65 };
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Pin Icon Generator</title>
+        <style>
+            :root {
+                color-scheme: dark;
+                --bg: #0f1115;
+                --bg-elev: #151922;
+                --bg-panel: #171c26;
+                --bg-panel-2: #1d2430;
+                --bg-soft: #202735;
+                --text: #e8edf6;
+                --text-muted: #98a2b3;
+                --border: #2a3342;
+                --border-strong: #3a465a;
+                --accent: #69a7ff;
+                --accent-2: #7ce0c3;
+                --warning: #ffb86b;
+                --shadow: rgba(0, 0, 0, 0.32);
+                --checker-1: #3b4252;
+                --checker-2: #232833;
+                --radius: 16px;
+                --radius-sm: 10px;
+                --gap: 16px;
+                --pad: 18px;
+                --control-h: 36px;
+                --font:
+                    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                    "Segoe UI", sans-serif;
+                --mono:
+                    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            }
+
+            body[data-theme="light"] {
+                color-scheme: light;
+                --bg: #f5f7fb;
+                --bg-elev: #ffffff;
+                --bg-panel: #ffffff;
+                --bg-panel-2: #f4f7fb;
+                --bg-soft: #eef3fa;
+                --text: #172033;
+                --text-muted: #667085;
+                --border: #d7dfeb;
+                --border-strong: #bac7db;
+                --accent: #2f6feb;
+                --accent-2: #0ea5a8;
+                --warning: #d97706;
+                --shadow: rgba(15, 23, 42, 0.12);
+                --checker-1: #d6dce7;
+                --checker-2: #f8fafc;
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                background:
+                    radial-gradient(
+                        circle at top left,
+                        rgba(105, 167, 255, 0.14),
+                        transparent 28%
+                    ),
+                    radial-gradient(
+                        circle at top right,
+                        rgba(124, 224, 195, 0.1),
+                        transparent 24%
+                    ),
+                    var(--bg);
+                color: var(--text);
+                font-family: var(--font);
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            button,
+            input,
+            select {
+                font: inherit;
+            }
+
+            .app-shell {
+                /*max-width: 1440px;*/
+                margin: 0 auto;
+                min-height: 100vh;
+                padding: 18px;
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+            }
+
+            .topbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 14px 16px;
+                background: color-mix(
+                    in srgb,
+                    var(--bg-panel) 88%,
+                    transparent
+                );
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                box-shadow: 0 12px 38px rgba(0, 0, 0, 0.08);
+                backdrop-filter: blur(12px);
+            }
+
+            .brand {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                min-width: 0;
+            }
+
+            .brand h1 {
+                margin: 0;
+                font-size: 18px;
+                letter-spacing: 0.02em;
+            }
+
+            .brand p {
+                margin: 0;
+                color: var(--text-muted);
+                font-size: 12px;
+            }
+
+            .toolbar {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+
+            .toggle-btn,
+            .action-btn {
+                height: 34px;
+                border: 1px solid var(--border);
+                background: var(--bg-soft);
+                color: var(--text);
+                border-radius: 999px;
+                padding: 0 12px;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                transition:
+                    transform 0.12s ease,
+                    border-color 0.12s ease,
+                    background 0.12s ease;
+            }
+
+            .toggle-btn:hover,
+            .action-btn:hover {
+                transform: translateY(-1px);
+                border-color: var(--border-strong);
+            }
+
+            .toggle-dot {
+                width: 9px;
+                height: 9px;
+                border-radius: 50%;
+                background: var(--accent);
+                box-shadow: 0 0 0 4px
+                    color-mix(in srgb, var(--accent) 22%, transparent);
+            }
+
+            .layout {
+                flex: 1;
+                display: grid;
+                grid-template-columns: minmax(410px, 540px) minmax(0, 1fr);
+                gap: 14px;
+                min-height: 0;
+                width: 100%;
+                max-width: none;
+            }
+
+            .panel,
+            .preview {
+                min-height: 0;
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                background: color-mix(
+                    in srgb,
+                    var(--bg-panel) 94%,
+                    transparent
+                );
+                box-shadow: 0 12px 38px rgba(0, 0, 0, 0.08);
+                overflow: hidden;
+            }
+
+            .panel {
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+
+            .panel-scroll {
+                padding: var(--pad);
+                overflow: auto;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: var(--gap);
+                align-content: start;
+            }
+
+            .section {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                padding: 12px;
+                background: color-mix(
+                    in srgb,
+                    var(--bg-panel-2) 88%,
+                    transparent
+                );
+                border: 1px solid var(--border);
+                border-radius: var(--radius-sm);
+                min-width: 0;
+                height: fit-content;
+            }
+
+            .section.full {
+                grid-column: 1 / -1;
+            }
+
+            .section-title {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                font-size: 12px;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+            }
+
+            .section-title strong {
+                color: var(--text);
+                font-size: 12px;
+                letter-spacing: 0.02em;
+                text-transform: none;
+            }
+
+            .row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .stack {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .upload-zone {
+                position: relative;
+                min-height: 102px;
+                border-radius: var(--radius-sm);
+                border: 1.5px dashed var(--border-strong);
+                background: var(--bg-soft);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                padding: 14px;
+                cursor: pointer;
+                overflow: hidden;
+            }
+
+            .upload-zone.drag {
+                border-color: var(--accent);
+                background: color-mix(
+                    in srgb,
+                    var(--accent) 12%,
+                    var(--bg-soft)
+                );
+            }
+
+            .upload-zone input {
+                position: absolute;
+                inset: 0;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+            .upload-zone .hint {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                color: var(--text-muted);
+                font-size: 12px;
+                line-height: 1.4;
+                pointer-events: none;
+            }
+
+            .upload-zone .hint strong {
+                color: var(--text);
+                font-size: 13px;
+            }
+
+            .filename {
+                font-family: var(--mono);
+                font-size: 11px;
+                color: var(--accent-2);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            label,
+            .field-label {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                font-size: 12px;
+                color: var(--text-muted);
+            }
+
+            .field-label span.value {
+                color: var(--accent);
+                font-family: var(--mono);
+                font-size: 11px;
+            }
+
+            select,
+            .num-input {
+                width: 100%;
+                min-height: var(--control-h);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                background: var(--bg-soft);
+                color: var(--text);
+                padding: 0 12px;
+                outline: none;
+            }
+
+            select:focus,
+            .num-input:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px
+                    color-mix(in srgb, var(--accent) 16%, transparent);
+            }
+
+            input[type="range"] {
+                width: 100%;
+                margin: 0;
+                appearance: none;
+                height: 4px;
+                border-radius: 999px;
+                background: linear-gradient(
+                    90deg,
+                    var(--accent),
+                    var(--accent-2)
+                );
+                outline: none;
+            }
+
+            input[type="range"]::-webkit-slider-thumb {
+                appearance: none;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: var(--bg-elev);
+                border: 2px solid var(--accent);
+                cursor: pointer;
+                box-shadow: 0 0 0 4px
+                    color-mix(in srgb, var(--accent) 14%, transparent);
+            }
+
+            input[type="color"] {
+                width: 40px;
+                height: 30px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 0;
+                background: transparent;
+                cursor: pointer;
+            }
+
+            .color-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .color-row .name {
+                flex: 1;
+                font-size: 12px;
+                color: var(--text-muted);
+            }
+
+            .switch-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                font-size: 12px;
+                color: var(--text-muted);
+            }
+
+            .switch {
+                width: 42px;
+                height: 24px;
+                border-radius: 999px;
+                background: var(--border);
+                position: relative;
+                cursor: pointer;
+                flex: 0 0 auto;
+                border: 1px solid transparent;
+                transition: background 0.12s ease;
+            }
+
+            .switch::after {
+                content: "";
+                position: absolute;
+                top: 3px;
+                left: 3px;
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                background: #fff;
+                transition: left 0.12s ease;
+            }
+
+            .switch.on {
+                background: var(--accent);
+            }
+
+            .switch.on::after {
+                left: 21px;
+            }
+
+            .grid-2 {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
     }
-    case 'circle': return { cx: w/2, cy: h*0.4, r: w*0.32 };
-    case 'rounded': return { cx: w/2, cy: h*0.41, r: w*0.28 };
-    case 'shield': return { cx: w/2, cy: h*0.38, r: w*0.28 };
-    case 'balloon': return { cx: w/2, cy: h*0.38, r: w*0.33 };
-    default: return { cx: w/2, cy: h*0.4, r: w*0.3 };
-  }
-}
 
-// ========== PREVIEW ==========
-const previewCanvas = document.getElementById('preview-canvas');
-const PREVIEW_W = 200, PREVIEW_H = 250;
-
-function updatePreview() {
-  drawPin(previewCanvas, PREVIEW_W, PREVIEW_H, false);
-}
-
-// ========== CONTROLS WIRING ==========
-function bindRange(id, key, valId, suffix='px', factor=1) {
-  const el = document.getElementById(id);
-  const valEl = document.getElementById(valId);
-  el.addEventListener('input', () => {
-    state[key] = parseFloat(el.value) * factor;
-    valEl.textContent = Math.round(state[key]) + suffix;
-    updatePreview();
-  });
-}
-
-bindRange('imgScale', 'imgScale', 'imgScaleVal', '%');
-bindRange('imgOffset', 'imgOffset', 'imgOffsetVal', 'px');
-bindRange('strokeWidth', 'strokeWidth', 'strokeWidthVal', 'px');
-bindRange('shadowBlur', 'shadowBlur', 'shadowBlurVal', 'px');
-bindRange('shadowOffset', 'shadowOffset', 'shadowOffsetVal', 'px');
-bindRange('shadowAlpha', 'shadowAlpha', 'shadowAlphaVal', '%');
-
-['pinColor','pin2Color','strokeColor','innerBgColor','shadowColor'].forEach(id => {
-  document.getElementById(id).addEventListener('input', e => {
-    state[id] = e.target.value;
-    updatePreview();
-  });
-});
-
-// Toggles
-function bindToggle(id, key) {
-  const el = document.getElementById(id);
-  el.addEventListener('click', () => {
-    state[key] = !state[key];
-    el.classList.toggle('on', state[key]);
-    updatePreview();
-  });
-}
-bindToggle('gradToggle', 'gradEnabled');
-bindToggle('innerBgToggle', 'innerBgEnabled');
-bindToggle('shadowToggle', 'shadowEnabled');
-
-// Shape presets
-document.getElementById('shapePresets').addEventListener('click', e => {
-  const btn = e.target.closest('.preset-btn');
-  if (!btn) return;
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  state.shape = btn.dataset.shape;
-  updatePreview();
-});
-
-// Export size
-['exportW','exportH'].forEach(id => {
-  document.getElementById(id).addEventListener('input', e => {
-    state[id.replace('export','')] = parseInt(e.target.value) || 128;
-    document.getElementById('dimInfo').textContent = `预览: ${PREVIEW_W}×${PREVIEW_H} | 导出: ${state.W||state.exportW}×${state.H||state.exportH}`;
-  });
-});
-
-document.getElementById('exportW').addEventListener('input', e => { state.exportW = parseInt(e.target.value)||128; });
-document.getElementById('exportH').addEventListener('input', e => { state.exportH = parseInt(e.target.value)||160; });
-
-// Size badges
-document.getElementById('sizeBadges').addEventListener('click', e => {
-  const badge = e.target.closest('.size-badge');
-  if (!badge) return;
-  const w = parseInt(badge.dataset.w), h = parseInt(badge.dataset.h);
-  state.exportW = w; state.exportH = h;
-  document.getElementById('exportW').value = w;
-  document.getElementById('exportH').value = h;
-  document.querySelectorAll('.size-badge').forEach(b => b.classList.remove('active-size'));
-  badge.classList.add('active-size');
-});
-
-// Upload
-const uploadZone = document.getElementById('uploadZone');
-const imgInput = document.getElementById('imgInput');
-const filename = document.getElementById('filename');
-
-function handleFile(file) {
-  if (!file || !file.type.startsWith('image/')) return;
-  filename.textContent = file.name;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const img = new Image();
-    img.onload = () => { state.userImage = img; updatePreview(); };
-    img.src = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-imgInput.addEventListener('change', e => handleFile(e.target.files[0]));
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag'); });
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag'));
-uploadZone.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadZone.classList.remove('drag');
-  handleFile(e.dataTransfer.files[0]);
-});
-
-// Preview background
-document.querySelectorAll('.bg-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const wrap = document.getElementById('preview-wrap');
-    const bg = btn.dataset.bg;
-    if (bg === 'dark') wrap.style.background = '#111';
-    else if (bg === 'light') wrap.style.background = '#f0f0f0';
-    else {
-      wrap.style.background = `
-        linear-gradient(45deg, #aaa 25%, transparent 25%),
-        linear-gradient(-45deg, #aaa 25%, transparent 25%),
-        linear-gradient(45deg, transparent 75%, #aaa 75%),
-        linear-gradient(-45deg, transparent 75%, #aaa 75%)`;
-      wrap.style.backgroundSize = '16px 16px';
-      wrap.style.backgroundPosition = '0 0, 0 8px, 8px -8px, -8px 0px';
-      wrap.style.backgroundColor = '#eee';
+    .shape-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
     }
-    if (bg !== 'checker') { wrap.style.backgroundImage = 'none'; wrap.style.backgroundColor = bg === 'dark' ? '#111' : '#f0f0f0'; }
-  });
-});
 
-// Download
-document.getElementById('dlBtn').addEventListener('click', () => {
-  const offscreen = document.createElement('canvas');
-  drawPin(offscreen, state.exportW, state.exportH, true);
+    .shape-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 82px;
+      border: 1px solid var(--border);
+      background: var(--bg-soft);
+      border-radius: 12px;
+      padding: 10px 8px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 12px;
+      transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease, transform 0.12s ease;
+    }
 
-  // Add shadow in export by drawing to a bigger canvas
-  const pad = Math.max(state.shadowBlur, state.shadowOffset) * 2 + 20;
-  const finalCanvas = document.createElement('canvas');
-  finalCanvas.width = state.exportW + pad * 2;
-  finalCanvas.height = state.exportH + pad * 2;
-  const fc = finalCanvas.getContext('2d');
+    .shape-card:hover {
+      transform: translateY(-1px);
+      border-color: var(--border-strong);
+    }
 
-  if (state.shadowEnabled) {
-    const sc = hexToRgb(state.shadowColor);
-    fc.shadowColor = `rgba(${sc.r},${sc.g},${sc.b},${state.shadowAlpha/100})`;
-    fc.shadowBlur = state.shadowBlur;
-    fc.shadowOffsetX = 0;
-    fc.shadowOffsetY = state.shadowOffset;
-  }
+    .shape-card.active {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 10%, var(--bg-soft));
+      color: var(--text);
+    }
 
-  // draw solid pin shape first for shadow, then clear and composite
-  const pathStr = SHAPES[state.shape](state.exportW, state.exportH);
-  const p2 = new Path2D(pathStr);
+    .shape-card svg {
+      width: 34px;
+      height: 34px;
+      display: block;
+      overflow: visible;
+    }
 
-  fc.save();
-  fc.translate(pad, pad);
-  if (state.shadowEnabled) {
-    const sc = hexToRgb(state.shadowColor);
-    fc.shadowColor = `rgba(${sc.r},${sc.g},${sc.b},${state.shadowAlpha/100})`;
-    fc.shadowBlur = state.shadowBlur;
-    fc.shadowOffsetY = state.shadowOffset;
-  }
-  fc.fillStyle = '#000';
-  fc.fill(p2);
-  fc.restore();
+    .shape-card path,
+    .shape-card circle,
+    .shape-card rect,
+    .shape-card polygon {
+      fill: color-mix(in srgb, var(--bg-elev) 88%, white);
+      stroke: currentColor;
+      stroke-width: 1.7;
+      vector-effect: non-scaling-stroke;
+    }
 
-  // Now draw actual colored pin on top
-  fc.save();
-  fc.shadowColor = 'transparent';
-  fc.translate(pad, pad);
-  fc.drawImage(offscreen, 0, 0);
-  fc.restore();
+            .preset-btn {
+                min-height: 34px;
+                border: 1px solid var(--border);
+                background: var(--bg-soft);
+                color: var(--text-muted);
+                border-radius: 999px;
+                cursor: pointer;
+                padding: 0 10px;
+                font-size: 12px;
+            }
 
-  const link = document.createElement('a');
-  link.download = `pin-icon-${state.exportW}x${state.exportH}.png`;
-  link.href = finalCanvas.toDataURL('image/png');
-  link.click();
-});
+            .preset-btn.active {
+                color: var(--accent);
+                border-color: var(--accent);
+                background: color-mix(
+                    in srgb,
+                    var(--accent) 10%,
+                    var(--bg-soft)
+                );
+            }
 
-// Init
-document.getElementById('preview-wrap').style.background = '#111';
-updatePreview();
-</script>
-</body>
+            .download-btn {
+                min-height: 42px;
+                border: 0;
+                border-radius: 12px;
+                background: linear-gradient(
+                    135deg,
+                    var(--accent),
+                    var(--accent-2)
+                );
+                color: #fff;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 12px 24px
+                    color-mix(in srgb, var(--accent) 20%, transparent);
+            }
+
+            .preview {
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+                min-height: 0;
+            }
+
+            .preview-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 14px 16px;
+                border-bottom: 1px solid var(--border);
+                background: color-mix(
+                    in srgb,
+                    var(--bg-panel-2) 72%,
+                    transparent
+                );
+            }
+
+            .preview-head h2 {
+                margin: 0;
+                font-size: 14px;
+            }
+
+            .preview-head .tip {
+                color: var(--text-muted);
+                font-size: 12px;
+            }
+
+            .preview-body {
+                flex: 1;
+                min-height: 0;
+                padding: 18px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background:
+                    radial-gradient(
+                        circle at 18% 18%,
+                        rgba(105, 167, 255, 0.06),
+                        transparent 30%
+                    ),
+                    radial-gradient(
+                        circle at 82% 80%,
+                        rgba(124, 224, 195, 0.06),
+                        transparent 28%
+                    ),
+                    var(--bg-elev);
+            }
+
+            .preview-stage {
+                width: 100%;
+                height: 100%;
+                min-height: 420px;
+                border: 1px solid var(--border);
+                border-radius: 22px;
+                position: relative;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--checker-1);
+            }
+
+            #previewCanvas {
+                display: block;
+                max-width: 92%;
+                max-height: 92%;
+                width: auto;
+                height: auto;
+                user-select: none;
+                pointer-events: none;
+            }
+
+            .preview-stage.preview-dark {
+                background:
+                    radial-gradient(
+                        circle at top,
+                        rgba(255, 255, 255, 0.05),
+                        transparent 35%
+                    ),
+                    #111318;
+            }
+
+            .preview-stage.preview-light {
+                background:
+                    radial-gradient(
+                        circle at top,
+                        rgba(0, 0, 0, 0.05),
+                        transparent 35%
+                    ),
+                    #f2f5fa;
+            }
+
+            .checkerboard {
+                background-color: var(--checker-2);
+                background-image:
+                    linear-gradient(
+                        45deg,
+                        var(--checker-1) 25%,
+                        transparent 25%
+                    ),
+                    linear-gradient(
+                        -45deg,
+                        var(--checker-1) 25%,
+                        transparent 25%
+                    ),
+                    linear-gradient(
+                        45deg,
+                        transparent 75%,
+                        var(--checker-1) 75%
+                    ),
+                    linear-gradient(
+                        -45deg,
+                        transparent 75%,
+                        var(--checker-1) 75%
+                    );
+                background-size: 20px 20px;
+                background-position:
+                    0 0,
+                    0 10px,
+                    10px -10px,
+                    -10px 0px;
+            }
+
+            #previewImage {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+                display: none;
+                user-select: none;
+                pointer-events: none;
+            }
+
+            #placeholderText {
+                color: var(--text-muted);
+                font-size: 13px;
+                text-align: center;
+                padding: 24px;
+            }
+
+            #renderCanvas {
+                display: none;
+            }
+
+            body.compact .app-shell {
+                gap: 10px;
+                padding: 12px;
+            }
+
+            body.compact .topbar {
+                padding: 10px 12px;
+            }
+
+            body.compact .layout {
+                gap: 10px;
+            }
+
+            body.compact .panel-scroll {
+                padding: 12px;
+                gap: 10px;
+            }
+
+            body.compact .section {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            body.compact .preview-head,
+            body.compact .preview-body {
+                padding: 12px;
+            }
+
+            @media (max-width: 1080px) {
+                .layout {
+                    grid-template-columns: 1fr;
+                }
+
+                .panel-scroll {
+                    grid-template-columns: 1fr;
+                }
+
+                .section.full {
+                    grid-column: auto;
+                }
+
+                .preview-stage {
+                    min-height: 360px;
+                }
+            }
+
+    @media (max-width: 640px) {
+                .topbar {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .toolbar {
+                    width: 100%;
+                    justify-content: flex-start;
+                }
+
+                .btn-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+        .grid-2 {
+            grid-template-columns: 1fr;
+        }
+
+        .shape-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+        </style>
+    </head>
+    <body class="compact" data-theme="light">
+        <div class="app-shell">
+            <header class="topbar">
+                <div class="brand">
+                    <h1>Pin Icon Generator</h1>
+                    <p>融合形状、边框、阴影、导出尺寸，默认紧凑模式</p>
+                </div>
+                <div class="toolbar">
+                    <button class="toggle-btn" id="themeToggle" type="button">
+                        <span class="toggle-dot" id="themeDot"></span>
+                        <span id="themeLabel">暗色模式</span>
+                    </button>
+                    <button class="toggle-btn" id="compactToggle" type="button">
+                        <span
+                            class="toggle-dot"
+                            style="background: var(--accent-2)"
+                        ></span>
+                        <span id="compactLabel">紧凑模式</span>
+                    </button>
+                </div>
+            </header>
+
+            <main class="layout">
+                <section class="panel">
+                    <div class="panel-scroll">
+                        <div class="section">
+                            <div class="section-title">
+                                <strong>Shape / 形状</strong>
+                                <span>统一按高度适配</span>
+                            </div>
+                            <div class="shape-grid" id="shapeSelect">
+                                <button class="shape-card active" data-shape="pin" type="button" aria-pressed="true">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z"/></svg>
+                                    <span>水滴</span>
+                                </button>
+                                <button class="shape-card" data-shape="circle" type="button" aria-pressed="false">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
+                                    <span>圆形</span>
+                                </button>
+                                <button class="shape-card" data-shape="squircle" type="button" aria-pressed="false">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"/></svg>
+                                    <span>圆角矩形</span>
+                                </button>
+                                <button class="shape-card" data-shape="square" type="button" aria-pressed="false">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/></svg>
+                                    <span>方形</span>
+                                </button>
+                                <button class="shape-card" data-shape="hexagon" type="button" aria-pressed="false">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,2 20.66,7 20.66,17 12,22 3.34,17 3.34,7"/></svg>
+                                    <span>六边形</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <div class="section-title">
+                                <strong>Image / 图片</strong>
+                                <span>拖拽或点击上传</span>
+                            </div>
+                            <label class="upload-zone" id="uploadZone">
+                                <input
+                                    id="imageUpload"
+                                    type="file"
+                                    accept="image/*"
+                                />
+                                <div class="hint">
+                                    <strong>点击上传 或拖拽图片</strong>
+                                    <span>支持 PNG / JPG / SVG / WebP</span>
+                                    <span class="filename" id="filename"></span>
+                                </div>
+                            </label>
+
+                            <div>
+                                <label class="field-label" for="iconSizeInput">
+                                    <span>图标大小 (px)</span>
+                                    <span class="value" id="iconSizeVal"
+                                        >128</span
+                                    >
+                                </label>
+                                <input
+                                    class="num-input"
+                                    type="number"
+                                    id="iconSizeInput"
+                                    min="1"
+                                    max="2048"
+                                    value="128"
+                                />
+                                <input
+                                    type="range"
+                                    id="iconSize"
+                                    min="1"
+                                    max="1024"
+                                    value="128"
+                                />
+                            </div>
+
+                            <div>
+                                <label class="field-label" for="imageScale">
+                                    <span>内部图片缩放</span>
+                                    <span class="value" id="imageScaleVal"
+                                        >1.00</span
+                                    >
+                                </label>
+                                <input
+                                    type="range"
+                                    id="imageScale"
+                                    min="0.01"
+                                    max="10"
+                                    step="0.01"
+                                    value="1"
+                                />
+                            </div>
+
+                            <div>
+                                <label class="field-label" for="imageOffsetY">
+                                    <span>内部图片微调 (垂直)</span>
+                                    <span class="value" id="imageOffsetYVal"
+                                        >0</span
+                                    >
+                                </label>
+                                <input
+                                    type="range"
+                                    id="imageOffsetY"
+                                    min="-50"
+                                    max="50"
+                                    value="0"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <div class="section-title">
+                                <strong>Border / 边框</strong>
+                                <span>内描边</span>
+                            </div>
+                            <div>
+                                <label class="field-label" for="borderWidth">
+                                    <span>边框宽度</span>
+                                    <span class="value" id="borderWidthVal"
+                                        >4</span
+                                    >
+                                </label>
+                                <input
+                                    type="range"
+                                    id="borderWidth"
+                                    min="0"
+                                    max="20"
+                                    value="4"
+                                />
+                            </div>
+
+                            <div>
+                                <label class="field-label" for="lineJoinSelect">
+                                    <span>边框拐角类型</span>
+                                    <span class="value">strokeLineJoin</span>
+                                </label>
+                                <select id="lineJoinSelect">
+                                    <option value="round">圆角 (Round)</option>
+                                    <option value="miter">尖角 (Miter)</option>
+                                    <option value="bevel">平角 (Bevel)</option>
+                                </select>
+                            </div>
+
+                            <div class="grid-2">
+                                <div>
+                                    <div class="field-label">
+                                        <span>边框颜色</span>
+                                        <span class="value" id="borderColorHex"
+                                            >#ef4444</span
+                                        >
+                                    </div>
+                                    <div class="color-row">
+                                        <input
+                                            type="color"
+                                            id="borderColor"
+                                            value="#ef4444"
+                                        />
+                                        <span class="name">Border</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="field-label">
+                                        <span>背景颜色</span>
+                                        <span class="value" id="bgColorHex"
+                                            >#ffffff</span
+                                        >
+                                    </div>
+                                    <div class="color-row">
+                                        <input
+                                            type="color"
+                                            id="bgColor"
+                                            value="#ffffff"
+                                        />
+                                        <span class="name">Fill</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section">
+                            <div class="section-title">
+                                <strong>Shadow / 阴影</strong>
+                                <span>默认开启</span>
+                            </div>
+                            <div class="switch-row">
+                                <span>启用阴影</span>
+                                <div class="switch on" id="enableShadow"></div>
+                            </div>
+                            <div id="shadowControls" class="stack">
+                                <div>
+                                    <label class="field-label" for="shadowBlur">
+                                        <span>模糊度</span>
+                                        <span class="value" id="shadowBlurVal"
+                                            >10</span
+                                        >
+                                    </label>
+                                    <input
+                                        type="range"
+                                        id="shadowBlur"
+                                        min="0"
+                                        max="50"
+                                        value="10"
+                                    />
+                                </div>
+                                <div>
+                                    <label
+                                        class="field-label"
+                                        for="shadowOffsetY"
+                                    >
+                                        <span>垂直偏移</span>
+                                        <span
+                                            class="value"
+                                            id="shadowOffsetYVal"
+                                            >5</span
+                                        >
+                                    </label>
+                                    <input
+                                        type="range"
+                                        id="shadowOffsetY"
+                                        min="-20"
+                                        max="20"
+                                        value="5"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section full">
+                            <div class="section-title">
+                                <strong>Export / 导出</strong>
+                                <span>PNG</span>
+                            </div>
+                            <div class="switch-row">
+                                <span>计算策略</span>
+                                <div class="row" style="gap: 8px">
+                                    <button
+                                        class="preset-btn active"
+                                        id="calcCenterBtn"
+                                        type="button"
+                                    >
+                                        居中
+                                    </button>
+                                    <button
+                                        class="preset-btn"
+                                        id="calcBottomBtn"
+                                        type="button"
+                                    >
+                                        贴底
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="switch-row">
+                                <span>导出正方形</span>
+                                <div class="switch on" id="exportSquare"></div>
+                            </div>
+                            <div class="grid-2">
+                                <div>
+                                    <label class="field-label" for="exportW">
+                                        <span>导出宽度</span>
+                                        <span class="value">auto</span>
+                                    </label>
+                                    <input
+                                        class="num-input"
+                                        type="number"
+                                        id="exportW"
+                                        value="0"
+                                        readonly
+                                    />
+                                </div>
+                                <div>
+                                    <label class="field-label" for="exportH">
+                                        <span>导出高度</span>
+                                        <span class="value">auto</span>
+                                    </label>
+                                    <input
+                                        class="num-input"
+                                        type="number"
+                                        id="exportH"
+                                        value="0"
+                                        readonly
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            class="download-btn"
+                            id="downloadBtn"
+                            type="button"
+                        >
+                            下载 PNG
+                        </button>
+                    </div>
+                </section>
+
+                <section class="preview">
+                    <div class="preview-head">
+                        <h2>实时预览</h2>
+                        <div class="tip">透明背景通过棋盘格显示</div>
+                    </div>
+                    <div class="preview-body">
+                        <div
+                            class="preview-stage checkerboard"
+                            id="previewStage"
+                        >
+                            <canvas id="previewCanvas"></canvas>
+                            <div id="placeholderText">
+                                请上传图片或调整参数以生成预览
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <canvas id="renderCanvas"></canvas>
+
+        <script>
+            const SHAPES = {
+                pin: {
+                    path: "M 12 2 C 8.13 2 5 5.13 5 9 C 5 14.25 12 22 12 22 S 19 14.25 19 9 C 19 5.13 15.87 2 12 2 Z",
+                    width: 14,
+                    height: 20,
+                    imageCenterY: 9,
+                    innerRadius: 7,
+                },
+                circle: {
+                    path: "M 22 12 A 10 10 0 1 1 2 12 A 10 10 0 1 1 22 12 Z",
+                    width: 20,
+                    height: 20,
+                    imageCenterY: 12,
+                    innerRadius: 10,
+                },
+                square: {
+                    path: "M 2 2 L 22 2 L 22 22 L 2 22 Z",
+                    width: 20,
+                    height: 20,
+                    imageCenterY: 12,
+                    innerRadius: 10,
+                },
+                squircle: {
+                    path: "M 6 2 L 18 2 A 4 4 0 0 1 22 6 L 22 18 A 4 4 0 0 1 18 22 L 6 22 A 4 4 0 0 1 2 18 L 2 6 A 4 4 0 0 1 6 2 Z",
+                    width: 20,
+                    height: 20,
+                    imageCenterY: 12,
+                    innerRadius: 10,
+                },
+                hexagon: {
+                    path: "M 12 2 L 20.66 7 L 20.66 17 L 12 22 L 3.34 17 L 3.34 7 Z",
+                    width: 17.32,
+                    height: 20,
+                    imageCenterY: 12,
+                    innerRadius: 8.66,
+                },
+            };
+
+            const SHAPE_BOUNDS = {
+                pin: { minX: 5, minY: 2, maxX: 19, maxY: 22 },
+                circle: { minX: 2, minY: 2, maxX: 22, maxY: 22 },
+                square: { minX: 2, minY: 2, maxX: 22, maxY: 22 },
+                squircle: { minX: 2, minY: 2, maxX: 22, maxY: 22 },
+                hexagon: { minX: 3.34, minY: 2, maxX: 20.66, maxY: 22 },
+            };
+
+            const originalCenterX = 12;
+            const originalCenterY = 12;
+            const exportCanvas = document.getElementById("renderCanvas");
+            const exportCtx = exportCanvas.getContext("2d");
+            const previewCanvas = document.getElementById("previewCanvas");
+            const previewCtx = previewCanvas.getContext("2d");
+            const placeholderText = document.getElementById("placeholderText");
+            const previewStage = document.getElementById("previewStage");
+            const uploadZone = document.getElementById("uploadZone");
+            const filename = document.getElementById("filename");
+            const shadowControls = document.getElementById("shadowControls");
+            const themeToggle = document.getElementById("themeToggle");
+            const compactToggle = document.getElementById("compactToggle");
+            const themeLabel = document.getElementById("themeLabel");
+            const compactLabel = document.getElementById("compactLabel");
+            const themeDot = document.getElementById("themeDot");
+            const calcCenterBtn = document.getElementById("calcCenterBtn");
+            const calcBottomBtn = document.getElementById("calcBottomBtn");
+            const exportSquare = document.getElementById("exportSquare");
+
+            const state = {
+                shape: "pin",
+                userImage: null,
+                iconSize: 128,
+                imageScale: 1.0,
+                imageOffsetY: 0,
+                borderWidth: 4,
+                lineJoin: "round",
+                borderColor: "#ef4444",
+                bgColor: "#ffffff",
+                enableShadow: true,
+                shadowBlur: 24,
+                shadowOffsetY: 12,
+                exportW: 0,
+                exportH: 0,
+                exportSquare: true,
+                exportStrategy: "center",
+                theme: "light",
+                compact: true,
+            };
+
+            const els = {
+                shapeSelect: document.getElementById("shapeSelect"),
+                imageUpload: document.getElementById("imageUpload"),
+                iconSize: document.getElementById("iconSize"),
+                iconSizeInput: document.getElementById("iconSizeInput"),
+                iconSizeVal: document.getElementById("iconSizeVal"),
+                imageScale: document.getElementById("imageScale"),
+                imageScaleVal: document.getElementById("imageScaleVal"),
+                imageOffsetY: document.getElementById("imageOffsetY"),
+                imageOffsetYVal: document.getElementById("imageOffsetYVal"),
+                borderWidth: document.getElementById("borderWidth"),
+                borderWidthVal: document.getElementById("borderWidthVal"),
+                lineJoinSelect: document.getElementById("lineJoinSelect"),
+                borderColor: document.getElementById("borderColor"),
+                borderColorHex: document.getElementById("borderColorHex"),
+                bgColor: document.getElementById("bgColor"),
+                bgColorHex: document.getElementById("bgColorHex"),
+                enableShadow: document.getElementById("enableShadow"),
+                shadowBlur: document.getElementById("shadowBlur"),
+                shadowBlurVal: document.getElementById("shadowBlurVal"),
+                shadowOffsetY: document.getElementById("shadowOffsetY"),
+                shadowOffsetYVal: document.getElementById("shadowOffsetYVal"),
+                exportW: document.getElementById("exportW"),
+                exportH: document.getElementById("exportH"),
+                downloadBtn: document.getElementById("downloadBtn"),
+            };
+
+            const clamp = (value, min, max) =>
+                Math.min(max, Math.max(min, value));
+
+            const hexToRgb = (hex) => {
+                const value = hex.replace("#", "");
+                return {
+                    r: parseInt(value.slice(0, 2), 16),
+                    g: parseInt(value.slice(2, 4), 16),
+                    b: parseInt(value.slice(4, 6), 16),
+                };
+            };
+
+            const getLayout = () => {
+                const shape = SHAPES[state.shape];
+                const bounds = SHAPE_BOUNDS[state.shape];
+                const bboxWidth = bounds.maxX - bounds.minX;
+                const bboxHeight = bounds.maxY - bounds.minY;
+                const scale = state.iconSize / bboxHeight;
+                const shapeWidth = bboxWidth * scale;
+                const shapeHeight = bboxHeight * scale;
+                const strokePad = Math.max(0, state.borderWidth);
+                const shadowSpread = state.enableShadow
+                    ? Math.max(0, Math.ceil(state.shadowBlur * 1.5))
+                    : 0;
+                const shadowOffsetX = state.enableShadow ? 0 : 0;
+                const shadowOffsetY = state.enableShadow
+                    ? Math.round(state.shadowOffsetY)
+                    : 0;
+                const shadowExtraLeft = shadowSpread + Math.max(0, -shadowOffsetX);
+                const shadowExtraRight = shadowSpread + Math.max(0, shadowOffsetX);
+                const shadowExtraTop = shadowSpread + Math.max(0, -shadowOffsetY);
+                const shadowExtraBottom = shadowSpread + Math.max(0, shadowOffsetY);
+                const leftPad = Math.ceil(strokePad + shadowExtraLeft);
+                const rightPad = Math.ceil(strokePad + shadowExtraRight);
+                const topPad = Math.ceil(strokePad + shadowExtraTop);
+                const bottomPad = Math.ceil(strokePad + shadowExtraBottom);
+
+                const rectWidth = Math.ceil(shapeWidth + leftPad + rightPad);
+                const rectHeight = Math.ceil(shapeHeight + topPad + bottomPad);
+                const squareSize = Math.max(rectWidth, rectHeight);
+                const width = state.exportSquare ? squareSize : rectWidth;
+                const height = state.exportSquare ? squareSize : rectHeight;
+
+                return {
+                    shape,
+                    bounds,
+                    scale,
+                    centerX: (bounds.minX + bounds.maxX) / 2,
+                    centerY: (bounds.minY + bounds.maxY) / 2,
+                    width,
+                    height,
+                    shapeWidth,
+                    shapeHeight,
+                    leftPad,
+                    rightPad,
+                    topPad,
+                    bottomPad,
+                    squareSize,
+                    shadowSpread,
+                    shadowOffsetX,
+                    shadowOffsetY,
+                };
+            };
+
+            const setTheme = (theme) => {
+                state.theme = theme;
+                document.body.dataset.theme = theme;
+                themeLabel.textContent =
+                    theme === "dark" ? "暗色模式" : "亮色模式";
+                themeDot.style.background =
+                    theme === "dark" ? "var(--accent)" : "var(--accent-2)";
+                localStorage.setItem("pin-icon-theme", theme);
+                renderIcon();
+            };
+
+            const setCompact = (compact) => {
+                state.compact = compact;
+                document.body.classList.toggle("compact", compact);
+                compactLabel.textContent = compact ? "紧凑模式" : "标准模式";
+                localStorage.setItem("pin-icon-compact", compact ? "1" : "0");
+            };
+
+            const updateFieldViews = () => {
+                els.iconSizeVal.textContent = String(state.iconSize);
+                els.imageScaleVal.textContent = state.imageScale.toFixed(2);
+                els.imageOffsetYVal.textContent = String(state.imageOffsetY);
+                els.borderWidthVal.textContent = String(state.borderWidth);
+                els.borderColorHex.textContent = state.borderColor;
+                els.bgColorHex.textContent = state.bgColor;
+                els.shadowBlurVal.textContent = String(state.shadowBlur);
+                els.shadowOffsetYVal.textContent = String(state.shadowOffsetY);
+                els.iconSize.value = state.iconSize;
+                els.iconSizeInput.value = state.iconSize;
+                els.imageScale.value = state.imageScale;
+                els.imageOffsetY.value = state.imageOffsetY;
+                els.borderWidth.value = state.borderWidth;
+                els.borderColor.value = state.borderColor;
+                els.bgColor.value = state.bgColor;
+                els.lineJoinSelect.value = state.lineJoin;
+                els.enableShadow.classList.toggle("on", state.enableShadow);
+                exportSquare.classList.toggle("on", state.exportSquare);
+                shadowControls.style.opacity = state.enableShadow
+                    ? "1"
+                    : "0.55";
+                shadowControls.style.pointerEvents = state.enableShadow
+                    ? "auto"
+                    : "none";
+                const layout = getLayout();
+                state.exportW = layout.width;
+                state.exportH = layout.height;
+                els.exportW.value = layout.width;
+                els.exportH.value = layout.height;
+            };
+
+            const getInnerCircle = (shapeKey, width, height) => {
+                switch (shapeKey) {
+                    case "pin": {
+                        const r = width * 0.46;
+                        const topCY = r + height * 0.04;
+                        return { cx: width / 2, cy: topCY, r: r * 0.65 };
+                    }
+                    case "circle":
+                        return {
+                            cx: width / 2,
+                            cy: height * 0.4,
+                            r: width * 0.32,
+                        };
+                    case "squircle":
+                        return {
+                            cx: width / 2,
+                            cy: height * 0.41,
+                            r: width * 0.28,
+                        };
+                    case "square":
+                        return {
+                            cx: width / 2,
+                            cy: height * 0.42,
+                            r: width * 0.28,
+                        };
+                    case "hexagon":
+                        return {
+                            cx: width / 2,
+                            cy: height * 0.4,
+                            r: width * 0.27,
+                        };
+                    default:
+                        return {
+                            cx: width / 2,
+                            cy: height * 0.4,
+                            r: width * 0.3,
+                        };
+                }
+            };
+
+            const drawPin = (targetCanvas, forExport = false) => {
+                const layout = getLayout();
+                const {
+                    shape,
+                    scale,
+                    bounds,
+                    centerX,
+                    centerY,
+                    width,
+                    height,
+                } = layout;
+                const path = new Path2D(shape.path);
+                const g = targetCanvas.getContext("2d");
+                targetCanvas.width = width;
+                targetCanvas.height = height;
+                g.clearRect(0, 0, width, height);
+
+                const shadowAlpha = forExport ? 0.38 : 0.34;
+                const shapePixelHeight = (bounds.maxY - bounds.minY) * scale;
+                const alignShiftY =
+                    state.exportStrategy === "bottom"
+                        ? Math.max(0, (height - state.iconSize) / 2 - layout.bottomPad * 0.15)
+                        : 0;
+                const shapeAxisX = width / 2;
+                const shapeAxisY = height / 2 + alignShiftY;
+                const shadowX = layout.shadowOffsetX;
+                const shadowY = layout.shadowOffsetY + shapePixelHeight * 0.08;
+
+                // 先画一层独立阴影，再画主体，避免 canvas shadow 被主体视觉上吞掉。
+                if (state.enableShadow) {
+                    g.save();
+                    g.translate(shapeAxisX + shadowX, shapeAxisY + shadowY);
+                    g.scale(scale, scale);
+                    g.translate(-centerX, -centerY);
+                    g.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+                    g.filter = layout.shadowSpread > 0
+                        ? `blur(${layout.shadowSpread}px)`
+                        : "none";
+                    g.fill(path);
+                    g.filter = "none";
+                    g.restore();
+                }
+
+                g.save();
+                g.translate(shapeAxisX, shapeAxisY);
+                g.scale(scale, scale);
+                g.translate(-centerX, -centerY);
+                g.fillStyle = state.bgColor;
+                g.fill(path);
+
+                if (state.borderWidth > 0) {
+                    g.save();
+                    g.clip(path);
+                    g.lineWidth = (state.borderWidth * 2) / scale;
+                    g.strokeStyle = state.borderColor;
+                    g.lineJoin = state.lineJoin;
+                    g.stroke(path);
+                    g.restore();
+                }
+
+                g.restore();
+
+                if (state.userImage) {
+                    const inner = getInnerCircle(state.shape, width, height);
+                    const img = state.userImage;
+                    const drawWidth = img.width * state.imageScale;
+                    const drawHeight = img.height * state.imageScale;
+                    const imageAreaCenterX = width / 2;
+                    const imageAreaCenterY = shapeAxisY + (shape.imageCenterY - centerY) * scale;
+                    const radius = inner.r * scale;
+                    const innerRadius = radius - state.borderWidth;
+                    const yOffsetPixel =
+                        innerRadius * (state.imageOffsetY / 100);
+
+                    g.save();
+                    g.translate(shapeAxisX, shapeAxisY);
+                    g.scale(scale, scale);
+                    g.translate(-centerX, -centerY);
+                    g.clip(path);
+                    g.setTransform(1, 0, 0, 1, 0, 0);
+                    g.drawImage(
+                        img,
+                        imageAreaCenterX - drawWidth / 2,
+                        imageAreaCenterY - drawHeight / 2 + yOffsetPixel,
+                        drawWidth,
+                        drawHeight,
+                    );
+                    g.restore();
+                }
+            };
+
+            const renderIcon = () => {
+                const layout = getLayout();
+                drawPin(previewCanvas, false);
+                previewCanvas.style.width = "auto";
+                previewCanvas.style.height = "auto";
+                previewCanvas.style.display = "block";
+                placeholderText.style.display = "none";
+            };
+
+            const updatePreviewStageTheme = () => {
+                previewStage.classList.remove("preview-dark", "preview-light");
+                previewStage.classList.add(
+                    state.theme === "dark" ? "preview-dark" : "preview-light",
+                );
+            };
+
+            const syncAndRender = () => {
+                updateFieldViews();
+                updatePreviewStageTheme();
+                renderIcon();
+            };
+
+            const handleFile = (file) => {
+                if (!file || !file.type.startsWith("image/")) return;
+                filename.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        state.userImage = img;
+                        const shape = SHAPES[state.shape];
+                        const scale = state.iconSize / shape.height;
+                        const targetRadius = shape.innerRadius * scale;
+                        const minDimension = Math.min(img.width, img.height);
+                        let initialScale = (targetRadius * 2) / minDimension;
+                        initialScale = parseFloat(initialScale.toFixed(2));
+                        state.imageScale = clamp(initialScale, 0.01, 10);
+                        syncAndRender();
+                    };
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            };
+
+            // 形状、尺寸、颜色和阴影参数全部统一走这条更新链，避免控件状态漂移。
+            els.shapeSelect.addEventListener("click", (e) => {
+                const btn = e.target.closest(".shape-card");
+                if (!btn) return;
+                state.shape = btn.dataset.shape;
+                document.querySelectorAll("#shapeSelect .shape-card").forEach((card) => {
+                    const active = card.dataset.shape === state.shape;
+                    card.classList.toggle("active", active);
+                    card.setAttribute("aria-pressed", active ? "true" : "false");
+                });
+                syncAndRender();
+            });
+
+            els.iconSizeInput.addEventListener("input", (e) => {
+                const val = clamp(
+                    parseInt(e.target.value || "128", 10),
+                    1,
+                    2048,
+                );
+                state.iconSize = val;
+                els.iconSize.value = Math.min(val, 1024);
+                els.iconSizeVal.textContent = String(val);
+                syncAndRender();
+            });
+
+            els.iconSize.addEventListener("input", (e) => {
+                const val = clamp(
+                    parseInt(e.target.value || "128", 10),
+                    1,
+                    1024,
+                );
+                state.iconSize = val;
+                els.iconSizeInput.value = val;
+                els.iconSizeVal.textContent = String(val);
+                syncAndRender();
+            });
+
+            const bindRange = (id, key, formatter) => {
+                const el = document.getElementById(id);
+                const valEl = document.getElementById(id + "Val");
+                el.addEventListener("input", (e) => {
+                    const val = parseFloat(e.target.value);
+                    state[key] = val;
+                    if (valEl)
+                        valEl.textContent = formatter
+                            ? formatter(val)
+                            : String(val);
+                    syncAndRender();
+                });
+            };
+
+            bindRange("imageScale", "imageScale", (v) => v.toFixed(2));
+            bindRange("imageOffsetY", "imageOffsetY", (v) =>
+                String(Math.round(v)),
+            );
+            bindRange("borderWidth", "borderWidth", (v) =>
+                String(Math.round(v)),
+            );
+            bindRange("shadowBlur", "shadowBlur", (v) => String(Math.round(v)));
+            bindRange("shadowOffsetY", "shadowOffsetY", (v) =>
+                String(Math.round(v)),
+            );
+
+            ["borderColor", "bgColor"].forEach((id) => {
+                const el = document.getElementById(id);
+                const hexEl = document.getElementById(id + "Hex");
+                el.addEventListener("input", (e) => {
+                    state[id] = e.target.value;
+                    hexEl.textContent = e.target.value;
+                    syncAndRender();
+                });
+            });
+
+            els.lineJoinSelect.addEventListener("change", (e) => {
+                state.lineJoin = e.target.value;
+                syncAndRender();
+            });
+
+            els.enableShadow.addEventListener("click", () => {
+                state.enableShadow = !state.enableShadow;
+                syncAndRender();
+            });
+
+            document
+                .getElementById("imageUpload")
+                .addEventListener("change", (e) => {
+                    handleFile(e.target.files[0]);
+                });
+
+            uploadZone.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                uploadZone.classList.add("drag");
+            });
+
+            uploadZone.addEventListener("dragleave", () =>
+                uploadZone.classList.remove("drag"),
+            );
+            uploadZone.addEventListener("drop", (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove("drag");
+                handleFile(e.dataTransfer.files[0]);
+            });
+
+            const setCalcStrategy = (strategy) => {
+                state.exportStrategy = strategy;
+                calcCenterBtn.classList.toggle("active", strategy === "center");
+                calcBottomBtn.classList.toggle("active", strategy === "bottom");
+                syncAndRender();
+            };
+
+            calcCenterBtn.addEventListener("click", () =>
+                setCalcStrategy("center"),
+            );
+            calcBottomBtn.addEventListener("click", () =>
+                setCalcStrategy("bottom"),
+            );
+            exportSquare.addEventListener("click", () => {
+                state.exportSquare = !state.exportSquare;
+                exportSquare.classList.toggle("on", state.exportSquare);
+                syncAndRender();
+            });
+
+            themeToggle.addEventListener("click", () => {
+                setTheme(state.theme === "dark" ? "light" : "dark");
+            });
+
+            compactToggle.addEventListener("click", () => {
+                setCompact(!state.compact);
+            });
+
+            document
+                .getElementById("downloadBtn")
+                .addEventListener("click", () => {
+                    const layout = getLayout();
+                    drawPin(exportCanvas, true);
+
+                    const link = document.createElement("a");
+                    link.download = `pin-icon-${layout.width}x${layout.height}.png`;
+                    link.href = exportCanvas.toDataURL("image/png");
+                    link.click();
+                });
+
+            const savedTheme = localStorage.getItem("pin-icon-theme");
+            const savedCompact = localStorage.getItem("pin-icon-compact");
+            setTheme(savedTheme === "dark" ? "dark" : "light");
+            setCompact(savedCompact === null ? true : savedCompact === "1");
+            setCalcStrategy("center");
+            exportSquare.classList.toggle("on", state.exportSquare);
+            updateFieldViews();
+            updatePreviewStageTheme();
+            renderIcon();
+        </script>
+    </body>
 </html>
