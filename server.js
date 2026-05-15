@@ -25,11 +25,16 @@
  *
  * POST /icon
  * Body: multipart/form-data，字段同上，图片通过 image 字段上传二进制。
+ *
+ * 默认值可由 `.env` 中对应的 `ICON_PARAM_*` 覆盖。
  */
 
 "use strict";
 
+require("dotenv").config();
+
 const express = require("express");
+const cors = require("cors");
 const { createCanvas, loadImage, Path2D } = require("@napi-rs/canvas");
 const multer = require("multer");
 const https = require("https");
@@ -42,6 +47,50 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
+
+const readEnvString = (name, fallback) => {
+  const value = process.env[name];
+  return value === undefined || value === "" ? fallback : value;
+};
+
+const readEnvBool = (name, fallback) => {
+  const value = process.env[name];
+  if (value === undefined || value === "") return fallback;
+  return value !== "0" && value.toLowerCase() !== "false";
+};
+
+const readEnvInt = (name, fallback, min, max) => {
+  const value = process.env[name];
+  if (value === undefined || value === "") return fallback;
+  const parsed = parseInt(value, 10);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+};
+
+const readEnvFloat = (name, fallback, min, max) => {
+  const value = process.env[name];
+  if (value === undefined || value === "") return fallback;
+  const parsed = parseFloat(value);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+};
+
+const readEnvOneOf = (name, options, fallback) => {
+  const value = readEnvString(name, fallback);
+  return options.includes(value) ? value : fallback;
+};
+
+const PORT = readEnvInt("PORT", 3000, 1, 65535);
+const ENABLE_CORS = readEnvBool("ENABLE_CORS", false);
+
+if (ENABLE_CORS) {
+  app.use(
+    cors({
+      origin: "*",
+      credentials: false,
+    })
+  );
+}
 
 // ─── 形状定义（与 HTML 完全相同）──────────────────────────────────────────────
 
@@ -83,6 +132,14 @@ const SHAPES = {
   },
 };
 
+const SHAPE_LABELS = {
+  pin: "图钉",
+  circle: "圆形",
+  square: "方形",
+  squircle: "圆角方",
+  hexagon: "六边形",
+};
+
 const SHAPE_BOUNDS = {
   pin: { minX: 5, minY: 2, maxX: 19, maxY: 22 },
   circle: { minX: 2, minY: 2, maxX: 22, maxY: 22 },
@@ -93,7 +150,7 @@ const SHAPE_BOUNDS = {
 
 const SHAPE_OPTIONS = Object.entries(SHAPES).map(([value, shape]) => ({
   value,
-  label: value,
+  label: SHAPE_LABELS[value] || value,
   path: shape.path,
 }));
 
@@ -110,46 +167,122 @@ const MAX_RENDER_DIMENSION = 4096;
 
 function parseState(query) {
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-  const float = (v, def) => {
-    const n = parseFloat(v);
-    return isNaN(n) ? def : n;
+  const parseIntOrFallback = (value, fallback) => {
+    const parsed = parseInt(value, 10);
+    return Number.isNaN(parsed) ? fallback : parsed;
   };
-  const int = (v, def) => {
-    const n = parseInt(v, 10);
-    return isNaN(n) ? def : n;
+  const parseFloatOrFallback = (value, fallback) => {
+    const parsed = parseFloat(value);
+    return Number.isNaN(parsed) ? fallback : parsed;
   };
   const bool = (v, def) => (v === undefined ? def : v !== "0" && v !== "false");
   const oneOf = (v, opts, def) => (opts.includes(v) ? v : def);
   const enumInt = (v, opts, def) => {
-    const n = int(v, def);
+    const n = parseIntOrFallback(v, def);
     return opts.includes(n) ? n : def;
   };
-
-  return {
-    shape: oneOf(query.shape, Object.keys(SHAPES), "pin"),
-    iconSize: clamp(int(query.iconSize, 128), 1, 2048),
-    imageScale: clamp(float(query.imageScale, 1.0), 0.01, 10),
-    imageOffsetY: clamp(float(query.imageOffsetY, 0), -50, 50),
-    borderWidth: clamp(float(query.borderWidth, 4), 0, 20),
-    lineJoin: oneOf(query.lineJoin, ["round", "miter", "bevel"], "round"),
-    borderColor: /^#[0-9a-fA-F]{6}$/.test(query.borderColor)
-      ? query.borderColor
+  const borderColorDefault = readEnvString("ICON_PARAM_BORDER_COLOR", "#ef4444");
+  const bgColorDefault = readEnvString("ICON_PARAM_BG_COLOR", "#ffffff");
+  const defaults = {
+    shape: readEnvOneOf("ICON_PARAM_SHAPE", Object.keys(SHAPES), "pin"),
+    iconSize: readEnvInt("ICON_PARAM_ICON_SIZE", 128, 1, 2048),
+    imageScale: readEnvFloat("ICON_PARAM_IMAGE_SCALE", 1.0, 0.01, 10),
+    imageOffsetY: readEnvFloat("ICON_PARAM_IMAGE_OFFSET_Y", 0, -50, 50),
+    borderWidth: readEnvFloat("ICON_PARAM_BORDER_WIDTH", 4, 0, 20),
+    lineJoin: readEnvOneOf(
+      "ICON_PARAM_LINE_JOIN",
+      ["round", "miter", "bevel"],
+      "round"
+    ),
+    borderColor: /^#[0-9a-fA-F]{6}$/.test(borderColorDefault)
+      ? borderColorDefault
       : "#ef4444",
-    bgColor: /^#[0-9a-fA-F]{6}$/.test(query.bgColor)
-      ? query.bgColor
+    bgColor: /^#[0-9a-fA-F]{6}$/.test(bgColorDefault)
+      ? bgColorDefault
       : "#ffffff",
-    enableShadow: bool(query.enableShadow, true),
-    shadowBlur: clamp(float(query.shadowBlur, 10), 0, 50),
-    shadowOffsetY: clamp(float(query.shadowOffsetY, 5), -20, 20),
-    exportSquare: bool(query.exportSquare, true),
-    exportStrategy: oneOf(query.exportStrategy, ["center", "bottom"], "center"),
-    antiAliasScale: enumInt(query.antiAliasScale, ANTI_ALIAS_SCALES, 1),
-    resizeStrategy: oneOf(
-      query.resizeStrategy,
+    enableShadow: readEnvBool("ICON_PARAM_ENABLE_SHADOW", true),
+    shadowBlur: readEnvFloat("ICON_PARAM_SHADOW_BLUR", 10, 0, 50),
+    shadowOffsetY: readEnvFloat("ICON_PARAM_SHADOW_OFFSET_Y", 5, -20, 20),
+    exportSquare: readEnvBool("ICON_PARAM_EXPORT_SQUARE", true),
+    exportStrategy: readEnvOneOf(
+      "ICON_PARAM_EXPORT_STRATEGY",
+      ["center", "bottom"],
+      "center"
+    ),
+    antiAliasScale: readEnvInt("ICON_PARAM_ANTI_ALIAS_SCALE", 1, 1, 4),
+    resizeStrategy: readEnvOneOf(
+      "ICON_PARAM_RESIZE_STRATEGY",
       RESIZE_STRATEGIES,
       "smooth-high"
     ),
-    imageUrl: query.imageUrl || null,
+  };
+
+  return {
+    shape: oneOf(query.shape, Object.keys(SHAPES), defaults.shape),
+    iconSize: clamp(
+      parseIntOrFallback(query.iconSize, defaults.iconSize),
+      1,
+      2048
+    ),
+    imageScale: clamp(
+      query.imageScale === undefined
+        ? defaults.imageScale
+        : parseFloatOrFallback(query.imageScale, defaults.imageScale),
+      0.01,
+      10
+    ),
+    imageOffsetY: clamp(
+      query.imageOffsetY === undefined
+        ? defaults.imageOffsetY
+        : parseFloatOrFallback(query.imageOffsetY, defaults.imageOffsetY),
+      -50,
+      50
+    ),
+    borderWidth: clamp(
+      query.borderWidth === undefined
+        ? defaults.borderWidth
+        : parseFloatOrFallback(query.borderWidth, defaults.borderWidth),
+      0,
+      20
+    ),
+    lineJoin: oneOf(query.lineJoin, ["round", "miter", "bevel"], defaults.lineJoin),
+    borderColor: /^#[0-9a-fA-F]{6}$/.test(query.borderColor)
+      ? query.borderColor
+      : defaults.borderColor,
+    bgColor: /^#[0-9a-fA-F]{6}$/.test(query.bgColor)
+      ? query.bgColor
+      : defaults.bgColor,
+    enableShadow: bool(query.enableShadow, defaults.enableShadow),
+    shadowBlur: clamp(
+      query.shadowBlur === undefined
+        ? defaults.shadowBlur
+        : parseFloatOrFallback(query.shadowBlur, defaults.shadowBlur),
+      0,
+      50
+    ),
+    shadowOffsetY: clamp(
+      query.shadowOffsetY === undefined
+        ? defaults.shadowOffsetY
+        : parseFloatOrFallback(query.shadowOffsetY, defaults.shadowOffsetY),
+      -20,
+      20
+    ),
+    exportSquare: bool(query.exportSquare, defaults.exportSquare),
+    exportStrategy: oneOf(
+      query.exportStrategy,
+      ["center", "bottom"],
+      defaults.exportStrategy
+    ),
+    antiAliasScale: enumInt(query.antiAliasScale, ANTI_ALIAS_SCALES, defaults.antiAliasScale),
+    resizeStrategy: oneOf(
+      query.resizeStrategy,
+      RESIZE_STRATEGIES,
+      defaults.resizeStrategy
+    ),
+    imageUrl:
+      query.imageUrl === undefined || query.imageUrl === ""
+        ? readEnvString("ICON_PARAM_IMAGE_URL", null)
+        : query.imageUrl,
   };
 }
 
@@ -515,6 +648,7 @@ app.get("/ui.html", (req, res) => {
         apiIconPath: "/icon",
         apiInfoPath: "/info",
         state,
+        shapeOptions: SHAPE_OPTIONS,
       }),
     });
   } catch (err) {
@@ -578,11 +712,10 @@ app.get("/info", (req, res) => {
 
 // ─── 启动 ──────────────────────────────────────────────────────────────────────
 
-const PORT = process.env.PORT || 3000;
-
 function startServer(port = PORT) {
   return app.listen(port, () => {
     console.log(`Pin Icon Server listening on http://localhost:${port}`);
+    console.log(`  CORS: ${ENABLE_CORS ? "enabled" : "disabled"}`);
     console.log(`  GET  /ui.html`);
     console.log(
       `  GET  /icon?shape=pin&iconSize=128&borderColor=%23ef4444&antiAliasScale=2`
@@ -601,4 +734,6 @@ module.exports = {
   startServer,
   parseState,
   getLayout,
+  ENABLE_CORS,
+  PORT,
 };

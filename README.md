@@ -18,9 +18,14 @@ npm install
 
 ```bash
 node server.js
-# 默认监听 http://localhost:3000
-# 可用 PORT=8080 node server.js 更改端口
 ```
+
+通过 `.env` 控制端口、CORS 和请求参数默认值；`.env.example` 保持同样结构，直接复制后修改即可。
+
+- `PORT`：服务监听端口，默认 `3000`
+- `ENABLE_CORS`：是否开启全局 CORS，默认 `0`
+- `ICON_PARAM_*`：请求参数默认值、候选值和范围都写在 `.env` / `.env.example` 里，运行时优先读取这些值
+- `ENABLE_CORS=1` 时，`/ui.html`、`/icon`、`/info` 都会带上 CORS 响应头
 
 ---
 
@@ -34,6 +39,7 @@ node server.js
 - 预览区实时请求服务端生成的 PNG
 - 复制区会输出当前状态对应的请求文本
 - 抗锯齿区可以选择离屏超采样倍率和缩小策略；预览固定 `1x`，导出和复制请求按当前选择生效
+- 当 `ENABLE_CORS=1` 时，页面和图像接口都可以跨域访问
 
 可直接打开：
 
@@ -50,6 +56,8 @@ http://localhost:3000/ui.html?shape=circle&iconSize=160&exportSquare=0
 ### GET `/icon`
 
 通过 query string 传递所有参数，返回 PNG 图片（`Content-Type: image/png`）。
+
+下表中的默认值与 `.env` / `.env.example` 保持一致。
 
 | 参数             | 类型     | 默认值     | 说明                                        |
 |----------------|--------|---------|-------------------------------------------|

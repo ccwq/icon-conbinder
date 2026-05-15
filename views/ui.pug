@@ -62,10 +62,10 @@ html(lang="zh")
 
       .app-shell {
         min-height: 100vh;
-        padding: 18px;
+        padding: 12px;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 8px;
       }
 
       .topbar {
@@ -73,7 +73,7 @@ html(lang="zh")
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 14px 16px;
+        padding: 8px 12px;
         border: 1px solid var(--border);
         border-radius: var(--radius);
         background: color-mix(in srgb, var(--panel) 90%, transparent);
@@ -83,12 +83,12 @@ html(lang="zh")
 
       .brand h1 {
         margin: 0;
-        font-size: 18px;
+        font-size: 16px;
         line-height: 1.2;
       }
 
       .brand p {
-        margin: 6px 0 0;
+        margin: 4px 0 0;
         color: var(--muted);
         font-size: 12px;
       }
@@ -97,14 +97,14 @@ html(lang="zh")
         display: flex;
         flex-wrap: wrap;
         justify-content: flex-end;
-        gap: 8px;
+        gap: 6px;
       }
 
       .chip-btn,
       .primary-btn,
       .ghost-btn {
-        min-height: 34px;
-        padding: 0 14px;
+        min-height: 32px;
+        padding: 0 12px;
         border-radius: 999px;
         display: inline-flex;
         align-items: center;
@@ -142,8 +142,8 @@ html(lang="zh")
         flex: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(420px, 560px) minmax(0, 1fr);
-        gap: 14px;
+        grid-template-columns: minmax(400px, 520px) minmax(0, 1fr);
+        gap: 8px;
       }
 
       .panel,
@@ -165,21 +165,21 @@ html(lang="zh")
         flex: 1;
         min-height: 0;
         overflow: auto;
-        padding: var(--pad);
+        padding: 10px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--gap);
+        gap: 8px;
         align-content: start;
       }
 
       .section {
-        padding: 12px;
+        padding: 8px;
         background: color-mix(in srgb, var(--panel-2) 88%, transparent);
         border: 1px solid var(--border);
         border-radius: var(--radius-sm);
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 6px;
         min-width: 0;
       }
 
@@ -192,8 +192,7 @@ html(lang="zh")
         gap: 12px;
         font-size: 12px;
         color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.02em;
       }
 
       .section-title strong {
@@ -206,7 +205,7 @@ html(lang="zh")
       .field {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
       }
 
       .field-label,
@@ -228,18 +227,41 @@ html(lang="zh")
       .grid-2 {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 8px;
       }
 
       .shape-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .preset-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .preset-chip {
+        min-height: 28px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .preset-chip.active {
+        border-color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 12%, var(--card));
+        color: var(--accent-2);
       }
 
       .shape-card {
-        min-height: 84px;
-        padding: 10px 8px;
+        min-height: 60px;
+        padding: 6px 4px;
         border: 1px solid var(--border);
         border-radius: 12px;
         background: var(--card);
@@ -248,7 +270,7 @@ html(lang="zh")
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 6px;
+        gap: 4px;
         transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
       }
 
@@ -264,8 +286,8 @@ html(lang="zh")
       }
 
       .shape-card svg {
-        width: 34px;
-        height: 34px;
+        width: 26px;
+        height: 26px;
         overflow: visible;
       }
 
@@ -418,9 +440,9 @@ html(lang="zh")
       }
 
       .request-box textarea {
-        min-height: 166px;
+        min-height: 112px;
         resize: vertical;
-        padding: 12px;
+        padding: 10px;
         font-family: var(--mono);
         font-size: 11px;
         line-height: 1.5;
@@ -442,7 +464,7 @@ html(lang="zh")
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 14px 16px;
+        padding: 8px 10px;
         border-bottom: 1px solid var(--border);
         background: color-mix(in srgb, var(--panel-2) 75%, transparent);
       }
@@ -460,15 +482,15 @@ html(lang="zh")
       .preview-body {
         flex: 1;
         min-height: 0;
-        padding: 18px;
+        padding: 10px;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 8px;
       }
 
       .preview-stage {
         flex: 1;
-        min-height: 420px;
+        min-height: 340px;
         border-radius: 20px;
         border: 1px solid var(--border);
         background:
@@ -518,7 +540,7 @@ html(lang="zh")
       .inline-note {
         font-size: 11px;
         color: var(--muted);
-        line-height: 1.5;
+        line-height: 1.4;
       }
 
       .sr-only {
@@ -540,7 +562,7 @@ html(lang="zh")
       }
 
       @media (max-width: 760px) {
-        .app-shell { padding: 12px; }
+        .app-shell { padding: 10px; }
         .topbar {
           flex-direction: column;
           align-items: stretch;
@@ -553,43 +575,45 @@ html(lang="zh")
         }
         .section.full { grid-column: auto; }
         .grid-2,
-        .shape-grid,
         .color-row {
           grid-template-columns: 1fr;
         }
+        .shape-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
         .preview-stage {
-          min-height: 320px;
+          min-height: 280px;
         }
       }
-  body
+      body
     .app-shell
       header.topbar
         .brand
-          h1 Pin Icon UI
-          p 通过 `pug` 模板直接调用 `server.js` 的 `/icon` 和 `/info`，所有参数实时预览并可复制请求。
+          h1 图标合成工作台
+          p 直接调用 `server.js` 预览、复制请求并导出 PNG。
         .toolbar
           button#copyRequestBtn.chip-btn(type="button") 复制请求
           button#copyQueryBtn.ghost-btn(type="button") 复制查询串
-          a.primary-btn(href="/icon?shape=pin&iconSize=128", target="_blank", rel="noreferrer") 打开示例
+          a.primary-btn(href="/icon?shape=pin&iconSize=128", target="_blank", rel="noreferrer") 打开示例图
 
       main.layout
         section.panel
           .panel-scroll
             section.section.full
               .section-title
-                strong 图片输入
-                span 支持本地文件与 `imageUrl`
+                strong 图片来源
+                span 本地文件或 `imageUrl`
               .stack
                 .upload-zone#uploadZone
                   input#imageUpload(type="file", accept="image/*")
                   .hint
-                    strong 拖放或点击上传本地图片
-                    span 本地文件会优先用于预览与请求复制；如果不选文件，则走 `imageUrl`。
+                    strong 拖放或单击上传
+                    span 本地文件优先用于预览和请求复制；不上传时使用 `imageUrl`。
                     span.file-line#fileName 未选择文件
                 .grid-2
                   .field
                     .field-label
-                      span imageUrl
+                      span 图片地址
                       span.value#imageUrlState -
                     input#imageUrl(type="text", placeholder="https://example.com/icon.png", value=state.imageUrl || "")
                   .field
@@ -598,12 +622,12 @@ html(lang="zh")
                       span.value#requestMode GET
                     input#requestModeInput(type="text", readonly, value="GET /icon")
                 .inline-note
-                  | 说明：预览会优先调用服务端 API；复制请求时，本地文件会生成 `curl -X POST`，远程图片或无文件时生成 `GET` URL。
+                  | 预览直接走服务端 API；本地文件时复制 `curl -X POST`，否则复制 `GET` 链接。
 
             section.section
               .section-title
                 strong 形状
-                span `shape`
+                span 选择外形
               .shape-grid#shapeGrid
                 each shape in shapeOptions
                   button.shape-card(type="button", data-shape=shape.value, aria-pressed=shape.value === state.shape ? "true" : "false", class=shape.value === state.shape ? "active" : "")
@@ -614,29 +638,37 @@ html(lang="zh")
             section.section
               .section-title
                 strong 尺寸
-                span `iconSize`
+                span 画布高度与预设
               .field
                 .field-label
-                  span 形状高度
+                  span 画布高度
                   span.value#iconSizeValue= state.iconSize
                 .range-row
                   input#iconSizeRange(type="range", min="1", max="2048", step="1", value=state.iconSize)
                   input#iconSizeInput(type="number", min="1", max="2048", step="1", value=state.iconSize)
+              .preset-row#iconSizePresetRow
+                button.preset-chip(type="button", data-size="24") 24
+                button.preset-chip(type="button", data-size="30") 30
+                button.preset-chip(type="button", data-size="36") 36
+                button.preset-chip(type="button", data-size="45") 45
+                button.preset-chip(type="button", data-size="54") 54
+              .inline-note
+                | 单击即可直接应用，适合常用输出尺寸。
 
             section.section
               .section-title
-                strong 图片参数
-                span `imageScale` / `imageOffsetY`
+                strong 图像参数
+                span 缩放与偏移
               .field
                 .field-label
-                  span imageScale
+                  span 图片缩放
                   span.value#imageScaleValue= state.imageScale.toFixed(2)
                 .range-row
                   input#imageScaleRange(type="range", min="0.01", max="10", step="0.01", value=state.imageScale)
                   input#imageScaleInput(type="number", min="0.01", max="10", step="0.01", value=state.imageScale)
               .field
                 .field-label
-                  span imageOffsetY
+                  span 垂直偏移
                   span.value#imageOffsetYValue= state.imageOffsetY
                 .range-row
                   input#imageOffsetYRange(type="range", min="-50", max="50", step="1", value=state.imageOffsetY)
@@ -645,56 +677,56 @@ html(lang="zh")
             section.section
               .section-title
                 strong 边框
-                span `borderWidth` / `lineJoin`
+                span 宽度与拐角
               .field
                 .field-label
-                  span borderWidth
+                  span 边框宽度
                   span.value#borderWidthValue= state.borderWidth
                 .range-row
                   input#borderWidthRange(type="range", min="0", max="20", step="1", value=state.borderWidth)
                   input#borderWidthInput(type="number", min="0", max="20", step="1", value=state.borderWidth)
               .field
                 .field-label
-                  span lineJoin
-                  span.value= state.lineJoin
+                  span 拐角样式
+                  span.value#lineJoinValue= ({ round: "圆角", miter: "斜接", bevel: "斜角" })[state.lineJoin] || state.lineJoin
                 select#lineJoinSelect
-                  option(value="round", selected=state.lineJoin === "round") round
-                  option(value="miter", selected=state.lineJoin === "miter") miter
-                  option(value="bevel", selected=state.lineJoin === "bevel") bevel
+                  option(value="round", selected=state.lineJoin === "round") 圆角
+                  option(value="miter", selected=state.lineJoin === "miter") 斜接
+                  option(value="bevel", selected=state.lineJoin === "bevel") 斜角
 
             section.section
               .section-title
                 strong 颜色
-                span `borderColor` / `bgColor`
+                span 描边与背景
               .field
                 .color-row
                   input#borderColor(type="color", value=state.borderColor)
                   input#borderColorHex(type="text", value=state.borderColor)
-                  span.value borderColor
+                  span.value 描边
                 .color-row
                   input#bgColor(type="color", value=state.bgColor)
                   input#bgColorHex(type="text", value=state.bgColor)
-                  span.value bgColor
+                  span.value 背景
 
             section.section
               .section-title
                 strong 阴影
-                span `enableShadow` / `shadowBlur` / `shadowOffsetY`
+                span 开关与参数
               .toggle-row
                 .field-label
-                  span enableShadow
+                  span 启用阴影
                   span.value#enableShadowValue= state.enableShadow ? "1" : "0"
                 .switch#enableShadowSwitch(class=state.enableShadow ? "on" : "")
               .field
                 .field-label
-                  span shadowBlur
+                  span 阴影模糊
                   span.value#shadowBlurValue= state.shadowBlur
                 .range-row
                   input#shadowBlurRange(type="range", min="0", max="50", step="1", value=state.shadowBlur)
                   input#shadowBlurInput(type="number", min="0", max="50", step="1", value=state.shadowBlur)
               .field
                 .field-label
-                  span shadowOffsetY
+                  span 阴影偏移
                   span.value#shadowOffsetYValue= state.shadowOffsetY
                 .range-row
                   input#shadowOffsetYRange(type="range", min="-20", max="20", step="1", value=state.shadowOffsetY)
@@ -703,28 +735,28 @@ html(lang="zh")
             section.section
               .section-title
                 strong 导出
-                span `exportSquare` / `exportStrategy`
+                span 画布形状与对齐
               .toggle-row
                 .field-label
-                  span exportSquare
+                  span 正方形导出
                   span.value#exportSquareValue= state.exportSquare ? "1" : "0"
                 .switch#exportSquareSwitch(class=state.exportSquare ? "on" : "")
               .field
                 .field-label
-                  span exportStrategy
-                  span.value#exportStrategyValue= state.exportStrategy
+                  span 对齐策略
+                  span.value#exportStrategyValue= ({ center: "居中", bottom: "贴底" })[state.exportStrategy] || state.exportStrategy
                 select#exportStrategySelect
-                  option(value="center", selected=state.exportStrategy === "center") center
-                  option(value="bottom", selected=state.exportStrategy === "bottom") bottom
+                  option(value="center", selected=state.exportStrategy === "center") 居中
+                  option(value="bottom", selected=state.exportStrategy === "bottom") 贴底
 
             section.section.full
               .section-title
                 strong 抗锯齿
-                span `antiAliasScale` / `resizeStrategy`
+                span 超采样与缩小策略
               .grid-2
                 .field
                   .field-label
-                    span antiAliasScale
+                    span 超采样倍率
                     span.value#antiAliasScaleValue= state.antiAliasScale
                   select#antiAliasScaleSelect
                     option(value="1", selected=state.antiAliasScale === 1) 1x
@@ -732,27 +764,27 @@ html(lang="zh")
                     option(value="4", selected=state.antiAliasScale === 4) 4x
                 .field
                   .field-label
-                    span resizeStrategy
-                    span.value#resizeStrategyValue= state.resizeStrategy
+                    span 缩小方式
+                    span.value#resizeStrategyValue= ({ "smooth-high": "平滑高质量", pixelated: "像素风", "step-down": "逐级缩小", "sharp-lanczos3": "Sharp Lanczos3" })[state.resizeStrategy] || state.resizeStrategy
                   select#resizeStrategySelect
-                    option(value="smooth-high", selected=state.resizeStrategy === "smooth-high") smooth-high
-                    option(value="pixelated", selected=state.resizeStrategy === "pixelated") pixelated
-                    option(value="step-down", selected=state.resizeStrategy === "step-down") step-down
-                    option(value="sharp-lanczos3", selected=state.resizeStrategy === "sharp-lanczos3") sharp-lanczos3
+                    option(value="smooth-high", selected=state.resizeStrategy === "smooth-high") 平滑高质量
+                    option(value="pixelated", selected=state.resizeStrategy === "pixelated") 像素风
+                    option(value="step-down", selected=state.resizeStrategy === "step-down") 逐级缩小
+                    option(value="sharp-lanczos3", selected=state.resizeStrategy === "sharp-lanczos3") Sharp Lanczos3
               .inline-note
-                | 说明：`antiAliasScale` 控制离屏超采样倍率，`resizeStrategy` 控制缩回目标尺寸时的采样方式。预览保持 `1x`，导出和复制请求按当前选择生效。
+                | `antiAliasScale` 控制超采样倍率，`resizeStrategy` 控制缩小方式。预览保持 `1x`，导出和复制请求按当前选择生效。
 
             section.section.full
               .section-title
-                strong 请求复制
-                span 当前状态生成的 API 请求
+                strong 请求文本
+                span 当前配置生成的请求
               .request-box
                 textarea#requestText(readonly)
                 .request-actions
                   button#copyRequestBtn2.primary-btn(type="button") 复制请求
                   button#copyQueryBtn2.ghost-btn(type="button") 复制查询串
                 .inline-note#requestHint
-                  | 本地图片优先生成 multipart 请求；如果没有本地图片，就复制 `GET /icon?...`。
+                  | 本地图片优先生成 multipart 请求；否则复制 `GET /icon?...`。
 
         section.preview
           .preview-head
@@ -768,7 +800,7 @@ html(lang="zh")
               .left
                 strong#previewStatus 加载中
                 |  · 
-                span#previewTip 等待参数变更
+                span#previewTip 等待你调整参数
               .right
                 span#previewInfo -
 
@@ -782,6 +814,22 @@ html(lang="zh")
         const apiBaseUrl = config.apiBaseUrl;
         const apiIconUrl = `${apiBaseUrl}${config.apiIconPath}`;
         const apiInfoUrl = `${apiBaseUrl}${config.apiInfoPath}`;
+        const shapeLabels = Object.fromEntries((config.shapeOptions || []).map((item) => [item.value, item.label]));
+        const lineJoinLabels = {
+          round: "圆角",
+          miter: "斜接",
+          bevel: "斜角",
+        };
+        const exportStrategyLabels = {
+          center: "居中",
+          bottom: "贴底",
+        };
+        const resizeStrategyLabels = {
+          "smooth-high": "平滑高质量",
+          pixelated: "像素风",
+          "step-down": "逐级缩小",
+          "sharp-lanczos3": "Sharp Lanczos3",
+        };
         const state = {
           ...initialState,
           file: null,
@@ -809,6 +857,7 @@ html(lang="zh")
           borderWidthInput: document.getElementById("borderWidthInput"),
           borderWidthValue: document.getElementById("borderWidthValue"),
           lineJoinSelect: document.getElementById("lineJoinSelect"),
+          lineJoinValue: document.getElementById("lineJoinValue"),
           borderColor: document.getElementById("borderColor"),
           borderColorHex: document.getElementById("borderColorHex"),
           bgColor: document.getElementById("bgColor"),
@@ -828,6 +877,7 @@ html(lang="zh")
           exportSquareSwitch: document.getElementById("exportSquareSwitch"),
           exportSquareValue: document.getElementById("exportSquareValue"),
           exportStrategySelect: document.getElementById("exportStrategySelect"),
+          exportStrategyValue: document.getElementById("exportStrategyValue"),
           requestText: document.getElementById("requestText"),
           requestHint: document.getElementById("requestHint"),
           previewImage: document.getElementById("previewImage"),
@@ -874,6 +924,7 @@ html(lang="zh")
           els.borderWidthRange.value = state.borderWidth;
           els.borderWidthInput.value = state.borderWidth;
           els.lineJoinSelect.value = state.lineJoin;
+          els.lineJoinValue.textContent = lineJoinLabels[state.lineJoin] || state.lineJoin;
           els.borderColor.value = state.borderColor;
           els.borderColorHex.value = state.borderColor;
           els.bgColor.value = state.bgColor;
@@ -888,11 +939,16 @@ html(lang="zh")
           els.shadowOffsetYInput.value = state.shadowOffsetY;
           els.antiAliasScaleValue.textContent = String(state.antiAliasScale);
           els.antiAliasScaleSelect.value = String(state.antiAliasScale);
-          els.resizeStrategyValue.textContent = state.resizeStrategy;
+          els.resizeStrategyValue.textContent = resizeStrategyLabels[state.resizeStrategy] || state.resizeStrategy;
           els.resizeStrategySelect.value = state.resizeStrategy;
           els.exportSquareSwitch.classList.toggle("on", !!state.exportSquare);
           els.exportSquareValue.textContent = state.exportSquare ? "1" : "0";
           els.exportStrategySelect.value = state.exportStrategy;
+          els.exportStrategyValue.textContent = exportStrategyLabels[state.exportStrategy] || state.exportStrategy;
+          document.querySelectorAll("#iconSizePresetRow .preset-chip").forEach((button) => {
+            const active = Number(button.dataset.size) === state.iconSize;
+            button.classList.toggle("active", active);
+          });
 
           document.querySelectorAll(".shape-card").forEach((card) => {
             const active = card.dataset.shape === state.shape;
@@ -999,7 +1055,7 @@ html(lang="zh")
             }
             const info = await infoRes.json();
             els.previewSize.textContent = `${info.width} × ${info.height}`;
-            els.previewInfo.textContent = `shape=${info.state.shape}, aa=${info.state.antiAliasScale}x, resize=${info.state.resizeStrategy}, render=${info.renderWidth} × ${info.renderHeight}`;
+            els.previewInfo.textContent = `形状=${shapeLabels[info.state.shape] || info.state.shape}，超采样=${info.state.antiAliasScale}x，缩小=${resizeStrategyLabels[info.state.resizeStrategy] || info.state.resizeStrategy}，渲染=${info.renderWidth} × ${info.renderHeight}`;
           } catch (error) {
             els.previewSize.textContent = "0 × 0";
             els.previewInfo.textContent = `info 失败: ${error.message}`;
@@ -1095,6 +1151,11 @@ html(lang="zh")
         els.exportStrategySelect.addEventListener("change", (event) => setState({ exportStrategy: event.target.value }));
         els.antiAliasScaleSelect.addEventListener("change", (event) => setState({ antiAliasScale: clamp(parseInt(event.target.value || "1", 10), 1, 4) }));
         els.resizeStrategySelect.addEventListener("change", (event) => setState({ resizeStrategy: event.target.value }));
+        document.getElementById("iconSizePresetRow").addEventListener("click", (event) => {
+          const button = event.target.closest(".preset-chip");
+          if (!button) return;
+          setState({ iconSize: clamp(parseInt(button.dataset.size || "128", 10), 1, 2048) });
+        });
 
         els.enableShadowSwitch.addEventListener("click", () => setState({ enableShadow: !state.enableShadow }));
         els.exportSquareSwitch.addEventListener("click", () => setState({ exportSquare: !state.exportSquare }));
