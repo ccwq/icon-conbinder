@@ -719,6 +719,31 @@ html(lang="zh")
 
             section.section.full
               .section-title
+                strong 抗锯齿
+                span `antiAliasScale` / `resizeStrategy`
+              .grid-2
+                .field
+                  .field-label
+                    span antiAliasScale
+                    span.value#antiAliasScaleValue= state.antiAliasScale
+                  select#antiAliasScaleSelect
+                    option(value="1", selected=state.antiAliasScale === 1) 1x
+                    option(value="2", selected=state.antiAliasScale === 2) 2x
+                    option(value="4", selected=state.antiAliasScale === 4) 4x
+                .field
+                  .field-label
+                    span resizeStrategy
+                    span.value#resizeStrategyValue= state.resizeStrategy
+                  select#resizeStrategySelect
+                    option(value="smooth-high", selected=state.resizeStrategy === "smooth-high") smooth-high
+                    option(value="pixelated", selected=state.resizeStrategy === "pixelated") pixelated
+                    option(value="step-down", selected=state.resizeStrategy === "step-down") step-down
+                    option(value="sharp-lanczos3", selected=state.resizeStrategy === "sharp-lanczos3") sharp-lanczos3
+              .inline-note
+                | 说明：`antiAliasScale` 控制离屏超采样倍率，`resizeStrategy` 控制缩回目标尺寸时的采样方式。预览保持 `1x`，导出和复制请求按当前选择生效。
+
+            section.section.full
+              .section-title
                 strong 请求复制
                 span 当前状态生成的 API 请求
               .request-box
@@ -796,6 +821,10 @@ html(lang="zh")
           shadowOffsetYRange: document.getElementById("shadowOffsetYRange"),
           shadowOffsetYInput: document.getElementById("shadowOffsetYInput"),
           shadowOffsetYValue: document.getElementById("shadowOffsetYValue"),
+          antiAliasScaleSelect: document.getElementById("antiAliasScaleSelect"),
+          antiAliasScaleValue: document.getElementById("antiAliasScaleValue"),
+          resizeStrategySelect: document.getElementById("resizeStrategySelect"),
+          resizeStrategyValue: document.getElementById("resizeStrategyValue"),
           exportSquareSwitch: document.getElementById("exportSquareSwitch"),
           exportSquareValue: document.getElementById("exportSquareValue"),
           exportStrategySelect: document.getElementById("exportStrategySelect"),
@@ -857,6 +886,10 @@ html(lang="zh")
           els.shadowOffsetYValue.textContent = String(state.shadowOffsetY);
           els.shadowOffsetYRange.value = state.shadowOffsetY;
           els.shadowOffsetYInput.value = state.shadowOffsetY;
+          els.antiAliasScaleValue.textContent = String(state.antiAliasScale);
+          els.antiAliasScaleSelect.value = String(state.antiAliasScale);
+          els.resizeStrategyValue.textContent = state.resizeStrategy;
+          els.resizeStrategySelect.value = state.resizeStrategy;
           els.exportSquareSwitch.classList.toggle("on", !!state.exportSquare);
           els.exportSquareValue.textContent = state.exportSquare ? "1" : "0";
           els.exportStrategySelect.value = state.exportStrategy;
@@ -883,9 +916,18 @@ html(lang="zh")
           params.set("shadowOffsetY", String(state.shadowOffsetY));
           params.set("exportSquare", state.exportSquare ? "1" : "0");
           params.set("exportStrategy", state.exportStrategy);
+          params.set("antiAliasScale", String(state.antiAliasScale));
+          params.set("resizeStrategy", state.resizeStrategy);
           if (state.imageUrl) {
             params.set("imageUrl", state.imageUrl);
           }
+          return params;
+        };
+
+        const buildPreviewParams = () => {
+          const params = buildQueryParams();
+          params.set("antiAliasScale", "1");
+          params.set("resizeStrategy", "smooth-high");
           return params;
         };
 
@@ -907,6 +949,8 @@ html(lang="zh")
               `  -F "shadowOffsetY=${state.shadowOffsetY}" \\`,
               `  -F "exportSquare=${state.exportSquare ? 1 : 0}" \\`,
               `  -F "exportStrategy=${state.exportStrategy}" \\`,
+              `  -F "antiAliasScale=${state.antiAliasScale}" \\`,
+              `  -F "resizeStrategy=${state.resizeStrategy}" \\`,
               `  -F "image=@${state.fileName || "image.png"}" \\`,
               `  -o output.png`,
             ];
@@ -916,7 +960,7 @@ html(lang="zh")
         };
 
         const buildPreviewRequest = () => {
-          const query = buildQueryParams().toString();
+          const query = buildPreviewParams().toString();
           return `${apiIconUrl}?${query}&_=${Date.now()}`;
         };
 
@@ -939,8 +983,8 @@ html(lang="zh")
         const updateRequestBox = () => {
           els.requestText.value = buildRequestText();
           els.requestHint.textContent = state.file
-            ? "已选择本地文件，复制内容为 multipart `curl` 请求。"
-            : "当前复制内容为 GET 请求 URL。";
+            ? "已选择本地文件，复制内容为 multipart `curl` 请求；预览保持 `1x`。"
+            : "当前复制内容为 GET 请求 URL；预览保持 `1x`。";
           els.previewMode.textContent = state.file ? "POST" : "GET";
         };
 
@@ -955,7 +999,7 @@ html(lang="zh")
             }
             const info = await infoRes.json();
             els.previewSize.textContent = `${info.width} × ${info.height}`;
-            els.previewInfo.textContent = `shape=${info.state.shape}, scale=${Number(info.scale).toFixed(2)}`;
+            els.previewInfo.textContent = `shape=${info.state.shape}, aa=${info.state.antiAliasScale}x, resize=${info.state.resizeStrategy}, render=${info.renderWidth} × ${info.renderHeight}`;
           } catch (error) {
             els.previewSize.textContent = "0 × 0";
             els.previewInfo.textContent = `info 失败: ${error.message}`;
@@ -976,7 +1020,7 @@ html(lang="zh")
             if (state.file) {
               const formData = new FormData();
               formData.set("image", state.file, state.fileName || state.file.name);
-              for (const [key, value] of buildQueryParams().entries()) {
+              for (const [key, value] of buildPreviewParams().entries()) {
                 formData.set(key, value);
               }
               const res = await fetch(apiIconUrl, {
@@ -1049,6 +1093,8 @@ html(lang="zh")
         els.bgColor.addEventListener("input", (event) => setState({ bgColor: event.target.value }));
         els.bgColorHex.addEventListener("input", (event) => setState({ bgColor: event.target.value.trim() }));
         els.exportStrategySelect.addEventListener("change", (event) => setState({ exportStrategy: event.target.value }));
+        els.antiAliasScaleSelect.addEventListener("change", (event) => setState({ antiAliasScale: clamp(parseInt(event.target.value || "1", 10), 1, 4) }));
+        els.resizeStrategySelect.addEventListener("change", (event) => setState({ resizeStrategy: event.target.value }));
 
         els.enableShadowSwitch.addEventListener("click", () => setState({ enableShadow: !state.enableShadow }));
         els.exportSquareSwitch.addEventListener("click", () => setState({ exportSquare: !state.exportSquare }));

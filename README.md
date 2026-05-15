@@ -11,6 +11,7 @@ npm install
 依赖：
 - `express` — HTTP 框架
 - `@napi-rs/canvas` — 提供预编译二进制的 Node Canvas（无需 node-gyp 编译）
+- `sharp` — 服务端高质量缩放策略 `sharp-lanczos3`
 - `multer` — 处理 multipart/form-data 文件上传
 
 ## 启动
@@ -32,6 +33,7 @@ node server.js
 - 左侧是参数面板，布局和 `pin-icon-generator.html` 保持同一组参数
 - 预览区实时请求服务端生成的 PNG
 - 复制区会输出当前状态对应的请求文本
+- 抗锯齿区可以选择离屏超采样倍率和缩小策略；预览固定 `1x`，导出和复制请求按当前选择生效
 
 可直接打开：
 
@@ -64,6 +66,8 @@ http://localhost:3000/ui.html?shape=circle&iconSize=160&exportSquare=0
 | `shadowOffsetY`| number | `5`     | 阴影垂直偏移，-20–20                          |
 | `exportSquare` | 0/1    | `1`     | 导出为正方形画布                               |
 | `exportStrategy`| string| `center`| 对齐策略：`center` / `bottom`               |
+| `antiAliasScale`| 1/2/4  | `1`     | 离屏超采样倍率                                  |
+| `resizeStrategy`| string | `smooth-high` | 缩小策略：`smooth-high` / `pixelated` / `step-down` / `sharp-lanczos3` |
 | `imageUrl`     | string | —       | 可选，内嵌图片的 URL（需可访问）                  |
 
 响应头中包含 `X-Icon-Width` 和 `X-Icon-Height` 字段，值为实际像素尺寸。
@@ -93,6 +97,8 @@ curl -X POST http://localhost:3000/icon \
   -F "iconSize=256" \
   -F "borderColor=#ef4444" \
   -F "enableShadow=1" \
+  -F "antiAliasScale=4" \
+  -F "resizeStrategy=sharp-lanczos3" \
   -F "image=@/path/to/your/icon.png" \
   -o output.png
 ```
@@ -127,6 +133,19 @@ curl -X POST http://localhost:3000/icon \
 | 图片裁剪       | clip(path) → setTransform(identity) → drawImage |
 | 导出尺寸       | `shadowBlur * 1.5` 作为 spread，同 HTML            |
 | `forExport`  | shadowAlpha 固定为 0.38（与 HTML `forExport=true` 相同）|
+| 抗锯齿        | `antiAliasScale` 控制超采样倍率，`resizeStrategy` 控制缩小算法 |
+
+## 抗锯齿策略
+
+- `smooth-high`：Canvas 内建高质量缩放，默认策略
+- `pixelated`：最近邻缩放，适合保留硬边或做对比
+- `step-down`：多次递减缩小，通常比一次性缩小更稳
+- `sharp-lanczos3`：仅服务端可用，适合作为高质量基准
+
+注意：
+
+- `pin-icon-generator.html` 的实时预览保持 `1x`，避免大画布和高倍率拖慢交互
+- `sharp-lanczos3` 仅在服务端 API 和 `ui.html` 生成请求时可用，静态页面不会直接执行 `sharp`
 
 ## 注意事项
 

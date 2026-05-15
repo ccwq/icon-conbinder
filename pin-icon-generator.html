@@ -1032,6 +1032,33 @@
                             </div>
                             <div class="grid-2">
                                 <div>
+                                    <label class="field-label" for="antiAliasScale">
+                                        <span>超采样倍率</span>
+                                        <span class="value" id="antiAliasScaleVal">1</span>
+                                    </label>
+                                    <select id="antiAliasScale">
+                                        <option value="1" selected>1x</option>
+                                        <option value="2">2x</option>
+                                        <option value="4">4x</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="field-label" for="resizeStrategy">
+                                        <span>缩小策略</span>
+                                        <span class="value" id="resizeStrategyVal">smooth-high</span>
+                                    </label>
+                                    <select id="resizeStrategy">
+                                        <option value="smooth-high" selected>smooth-high</option>
+                                        <option value="pixelated">pixelated</option>
+                                        <option value="step-down">step-down</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="tip" style="margin-top: 6px">
+                                预览保持 `1x`，导出时按当前参数生成最终 PNG。
+                            </div>
+                            <div class="grid-2">
+                                <div>
                                     <label class="field-label" for="exportW">
                                         <span>导出宽度</span>
                                         <span class="value">auto</span>
@@ -1158,6 +1185,10 @@
             const calcCenterBtn = document.getElementById("calcCenterBtn");
             const calcBottomBtn = document.getElementById("calcBottomBtn");
             const exportSquare = document.getElementById("exportSquare");
+            const antiAliasScale = document.getElementById("antiAliasScale");
+            const antiAliasScaleVal = document.getElementById("antiAliasScaleVal");
+            const resizeStrategy = document.getElementById("resizeStrategy");
+            const resizeStrategyVal = document.getElementById("resizeStrategyVal");
 
             const state = {
                 shape: "pin",
@@ -1176,6 +1207,8 @@
                 exportH: 0,
                 exportSquare: true,
                 exportStrategy: "center",
+                antiAliasScale: 1,
+                resizeStrategy: "smooth-high",
                 theme: "light",
                 compact: true,
             };
@@ -1202,6 +1235,10 @@
                 shadowBlurVal: document.getElementById("shadowBlurVal"),
                 shadowOffsetY: document.getElementById("shadowOffsetY"),
                 shadowOffsetYVal: document.getElementById("shadowOffsetYVal"),
+                antiAliasScale: antiAliasScale,
+                antiAliasScaleVal: antiAliasScaleVal,
+                resizeStrategy: resizeStrategy,
+                resizeStrategyVal: resizeStrategyVal,
                 exportW: document.getElementById("exportW"),
                 exportH: document.getElementById("exportH"),
                 downloadBtn: document.getElementById("downloadBtn"),
@@ -1298,6 +1335,8 @@
                 els.bgColorHex.textContent = state.bgColor;
                 els.shadowBlurVal.textContent = String(state.shadowBlur);
                 els.shadowOffsetYVal.textContent = String(state.shadowOffsetY);
+                els.antiAliasScaleVal.textContent = String(state.antiAliasScale);
+                els.resizeStrategyVal.textContent = state.resizeStrategy;
                 els.iconSize.value = state.iconSize;
                 els.iconSizeInput.value = state.iconSize;
                 els.imageScale.value = state.imageScale;
@@ -1306,6 +1345,8 @@
                 els.borderColor.value = state.borderColor;
                 els.bgColor.value = state.bgColor;
                 els.lineJoinSelect.value = state.lineJoin;
+                els.antiAliasScale.value = String(state.antiAliasScale);
+                els.resizeStrategy.value = state.resizeStrategy;
                 els.enableShadow.classList.toggle("on", state.enableShadow);
                 exportSquare.classList.toggle("on", state.exportSquare);
                 shadowControls.style.opacity = state.enableShadow
@@ -1361,7 +1402,7 @@
                 }
             };
 
-            const drawPin = (targetCanvas, forExport = false) => {
+            const drawPin = (targetCanvas, forExport = false, renderScale = 1) => {
                 const layout = getLayout();
                 const {
                     shape,
@@ -1373,10 +1414,12 @@
                     height,
                 } = layout;
                 const path = new Path2D(shape.path);
+                const renderWidth = Math.round(width * renderScale);
+                const renderHeight = Math.round(height * renderScale);
                 const g = targetCanvas.getContext("2d");
-                targetCanvas.width = width;
-                targetCanvas.height = height;
-                g.clearRect(0, 0, width, height);
+                targetCanvas.width = renderWidth;
+                targetCanvas.height = renderHeight;
+                g.clearRect(0, 0, renderWidth, renderHeight);
 
                 const shadowAlpha = forExport ? 0.38 : 0.34;
                 const shapePixelHeight = (bounds.maxY - bounds.minY) * scale;
@@ -1388,16 +1431,19 @@
                 const shapeAxisY = height / 2 + alignShiftY;
                 const shadowX = layout.shadowOffsetX;
                 const shadowY = layout.shadowOffsetY + shapePixelHeight * 0.08;
+                const renderLineWidth = (state.borderWidth * 2) / (scale * renderScale);
+                const renderBlur = layout.shadowSpread * renderScale;
 
                 // 先画一层独立阴影，再画主体，避免 canvas shadow 被主体视觉上吞掉。
                 if (state.enableShadow) {
                     g.save();
+                    g.scale(renderScale, renderScale);
                     g.translate(shapeAxisX + shadowX, shapeAxisY + shadowY);
                     g.scale(scale, scale);
                     g.translate(-centerX, -centerY);
                     g.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
                     g.filter = layout.shadowSpread > 0
-                        ? `blur(${layout.shadowSpread}px)`
+                        ? `blur(${renderBlur}px)`
                         : "none";
                     g.fill(path);
                     g.filter = "none";
@@ -1405,6 +1451,7 @@
                 }
 
                 g.save();
+                g.scale(renderScale, renderScale);
                 g.translate(shapeAxisX, shapeAxisY);
                 g.scale(scale, scale);
                 g.translate(-centerX, -centerY);
@@ -1414,7 +1461,7 @@
                 if (state.borderWidth > 0) {
                     g.save();
                     g.clip(path);
-                    g.lineWidth = (state.borderWidth * 2) / scale;
+                    g.lineWidth = renderLineWidth;
                     g.strokeStyle = state.borderColor;
                     g.lineJoin = state.lineJoin;
                     g.stroke(path);
@@ -1434,8 +1481,14 @@
                     const innerRadius = radius - state.borderWidth;
                     const yOffsetPixel =
                         innerRadius * (state.imageOffsetY / 100);
+                    const renderImageAreaCenterX = imageAreaCenterX * renderScale;
+                    const renderImageAreaCenterY = imageAreaCenterY * renderScale;
+                    const renderDrawWidth = drawWidth * renderScale;
+                    const renderDrawHeight = drawHeight * renderScale;
+                    const renderYOffsetPixel = yOffsetPixel * renderScale;
 
                     g.save();
+                    g.scale(renderScale, renderScale);
                     g.translate(shapeAxisX, shapeAxisY);
                     g.scale(scale, scale);
                     g.translate(-centerX, -centerY);
@@ -1443,18 +1496,61 @@
                     g.setTransform(1, 0, 0, 1, 0, 0);
                     g.drawImage(
                         img,
-                        imageAreaCenterX - drawWidth / 2,
-                        imageAreaCenterY - drawHeight / 2 + yOffsetPixel,
-                        drawWidth,
-                        drawHeight,
+                        renderImageAreaCenterX - renderDrawWidth / 2,
+                        renderImageAreaCenterY - renderDrawHeight / 2 + renderYOffsetPixel,
+                        renderDrawWidth,
+                        renderDrawHeight,
                     );
                     g.restore();
                 }
             };
 
+            const resizeCanvas = (sourceCanvas, targetWidth, targetHeight, strategy) => {
+                if (
+                    sourceCanvas.width === targetWidth &&
+                    sourceCanvas.height === targetHeight
+                ) {
+                    return sourceCanvas;
+                }
+
+                const finalCanvas = document.createElement("canvas");
+                finalCanvas.width = targetWidth;
+                finalCanvas.height = targetHeight;
+                const finalCtx = finalCanvas.getContext("2d");
+
+                if (strategy === "pixelated") {
+                    finalCtx.imageSmoothingEnabled = false;
+                } else {
+                    finalCtx.imageSmoothingEnabled = true;
+                    finalCtx.imageSmoothingQuality = "high";
+                }
+
+                let source = sourceCanvas;
+                if (strategy === "step-down") {
+                    while (
+                        source.width / 2 >= targetWidth * 1.2 &&
+                        source.height / 2 >= targetHeight * 1.2
+                    ) {
+                        const nextWidth = Math.max(targetWidth, Math.ceil(source.width / 2));
+                        const nextHeight = Math.max(targetHeight, Math.ceil(source.height / 2));
+                        const stepCanvas = document.createElement("canvas");
+                        stepCanvas.width = nextWidth;
+                        stepCanvas.height = nextHeight;
+                        const stepCtx = stepCanvas.getContext("2d");
+                        stepCtx.imageSmoothingEnabled = true;
+                        stepCtx.imageSmoothingQuality = "high";
+                        stepCtx.drawImage(source, 0, 0, nextWidth, nextHeight);
+                        source = stepCanvas;
+                    }
+                }
+
+                finalCtx.drawImage(source, 0, 0, targetWidth, targetHeight);
+                return finalCanvas;
+            };
+
             const renderIcon = () => {
                 const layout = getLayout();
-                drawPin(previewCanvas, false);
+                drawPin(previewCanvas, false, 1);
                 previewCanvas.style.width = "auto";
                 previewCanvas.style.height = "auto";
                 previewCanvas.style.display = "block";
@@ -1617,6 +1713,16 @@
                 exportSquare.classList.toggle("on", state.exportSquare);
                 syncAndRender();
             });
+            antiAliasScale.addEventListener("change", (e) => {
+                state.antiAliasScale = clamp(parseInt(e.target.value || "1", 10), 1, 4);
+                antiAliasScaleVal.textContent = String(state.antiAliasScale);
+                syncAndRender();
+            });
+            resizeStrategy.addEventListener("change", (e) => {
+                state.resizeStrategy = e.target.value;
+                resizeStrategyVal.textContent = state.resizeStrategy;
+                syncAndRender();
+            });
 
             themeToggle.addEventListener("click", () => {
                 setTheme(state.theme === "dark" ? "light" : "dark");
@@ -1630,11 +1736,17 @@
                 .getElementById("downloadBtn")
                 .addEventListener("click", () => {
                     const layout = getLayout();
-                    drawPin(exportCanvas, true);
+                    drawPin(exportCanvas, true, state.antiAliasScale);
+                    const finalCanvas = resizeCanvas(
+                        exportCanvas,
+                        layout.width,
+                        layout.height,
+                        state.resizeStrategy,
+                    );
 
                     const link = document.createElement("a");
                     link.download = `pin-icon-${layout.width}x${layout.height}.png`;
-                    link.href = exportCanvas.toDataURL("image/png");
+                    link.href = finalCanvas.toDataURL("image/png");
                     link.click();
                 });
 

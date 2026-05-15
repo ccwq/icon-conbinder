@@ -19,6 +19,8 @@
  * shadowOffsetY  {number}  (default: 5)
  * exportSquare   {0|1}     (default: 1)
  * exportStrategy {string}  center|bottom (default: center)
+ * antiAliasScale {1|2|4}   (default: 1)
+ * resizeStrategy {string}  smooth-high|pixelated|step-down|sharp-lanczos3 (default: smooth-high)
  * imageUrl       {string}  可选，图片 URL（需可公网访问）
  *
  * POST /icon
@@ -28,12 +30,13 @@
 "use strict";
 
 const express = require("express");
-const { createCanvas, loadImage } = require("@napi-rs/canvas");
+const { createCanvas, loadImage, Path2D } = require("@napi-rs/canvas");
 const multer = require("multer");
 const https = require("https");
 const http = require("http");
 const path = require("path");
 const { URL } = require("url");
+const sharp = require("sharp");
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -94,6 +97,15 @@ const SHAPE_OPTIONS = Object.entries(SHAPES).map(([value, shape]) => ({
   path: shape.path,
 }));
 
+const ANTI_ALIAS_SCALES = [1, 2, 4];
+const RESIZE_STRATEGIES = [
+  "smooth-high",
+  "pixelated",
+  "step-down",
+  "sharp-lanczos3",
+];
+const MAX_RENDER_DIMENSION = 4096;
+
 // ─── 参数解析与默认值 ──────────────────────────────────────────────────────────
 
 function parseState(query) {
@@ -108,6 +120,10 @@ function parseState(query) {
   };
   const bool = (v, def) => (v === undefined ? def : v !== "0" && v !== "false");
   const oneOf = (v, opts, def) => (opts.includes(v) ? v : def);
+  const enumInt = (v, opts, def) => {
+    const n = int(v, def);
+    return opts.includes(n) ? n : def;
+  };
 
   return {
     shape: oneOf(query.shape, Object.keys(SHAPES), "pin"),
@@ -127,6 +143,12 @@ function parseState(query) {
     shadowOffsetY: clamp(float(query.shadowOffsetY, 5), -20, 20),
     exportSquare: bool(query.exportSquare, true),
     exportStrategy: oneOf(query.exportStrategy, ["center", "bottom"], "center"),
+    antiAliasScale: enumInt(query.antiAliasScale, ANTI_ALIAS_SCALES, 1),
+    resizeStrategy: oneOf(
+      query.resizeStrategy,
+      RESIZE_STRATEGIES,
+      "smooth-high"
+    ),
     imageUrl: query.imageUrl || null,
   };
 }
@@ -185,6 +207,26 @@ function getLayout(state) {
   };
 }
 
+function getRenderSize(state, layout = getLayout(state)) {
+  return {
+    width: Math.round(layout.width * state.antiAliasScale),
+    height: Math.round(layout.height * state.antiAliasScale),
+  };
+}
+
+function assertRenderSize(state, layout = getLayout(state)) {
+  const renderSize = getRenderSize(state, layout);
+  if (
+    renderSize.width > MAX_RENDER_DIMENSION ||
+    renderSize.height > MAX_RENDER_DIMENSION
+  ) {
+    throw new Error(
+      `antiAliasScale=${state.antiAliasScale} makes render size ${renderSize.width}x${renderSize.height} exceed ${MAX_RENDER_DIMENSION}px`
+    );
+  }
+  return renderSize;
+}
+
 // ─── 内圆计算（与 HTML getInnerCircle() 完全相同）────────────────────────────
 
 function getInnerCircle(shapeKey, width, height) {
@@ -209,17 +251,20 @@ function getInnerCircle(shapeKey, width, height) {
 
 // ─── 核心渲染（移植自 HTML drawPin()）────────────────────────────────────────
 
-function drawPin(state, userImage) {
+function drawPinLayers(targetCanvas, state, userImage) {
   const layout = getLayout(state);
   const { shape, scale, bounds, centerX, centerY, width, height } = layout;
+  const renderScale = state.antiAliasScale;
+  const renderSize = assertRenderSize(state, layout);
 
-  const canvas = createCanvas(width, height);
-  const g = canvas.getContext("2d");
+  targetCanvas.width = renderSize.width;
+  targetCanvas.height = renderSize.height;
+  const g = targetCanvas.getContext("2d");
 
-  g.clearRect(0, 0, width, height);
+  g.clearRect(0, 0, renderSize.width, renderSize.height);
 
   // 用 Path2D 绘制形状路径（@napi-rs/canvas 支持 Path2D + SVG path string）
-  const path = new (require("@napi-rs/canvas").Path2D)(shape.path);
+  const path = new Path2D(shape.path);
 
   const shadowAlpha = 0.38; // 与 HTML forExport=true 保持一致
   const shapePixelHeight = (bounds.maxY - bounds.minY) * scale;
@@ -232,16 +277,19 @@ function drawPin(state, userImage) {
   const shapeAxisY = height / 2 + alignShiftY;
   const shadowX = layout.shadowOffsetX;
   const shadowY = layout.shadowOffsetY + shapePixelHeight * 0.08;
+  const renderLineWidth = (state.borderWidth * 2) / (scale * renderScale);
+  const renderBlur = layout.shadowSpread * renderScale;
 
   // 1. 独立阴影层（与 HTML 完全相同的策略：先画阴影再画主体）
   if (state.enableShadow) {
     g.save();
+    g.scale(renderScale, renderScale);
     g.translate(shapeAxisX + shadowX, shapeAxisY + shadowY);
     g.scale(scale, scale);
     g.translate(-centerX, -centerY);
     g.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
     if (layout.shadowSpread > 0) {
-      g.filter = `blur(${layout.shadowSpread}px)`;
+      g.filter = `blur(${renderBlur}px)`;
     }
     g.fill(path);
     g.filter = "none";
@@ -250,6 +298,7 @@ function drawPin(state, userImage) {
 
   // 2. 主体形状（填充 + 内描边）
   g.save();
+  g.scale(renderScale, renderScale);
   g.translate(shapeAxisX, shapeAxisY);
   g.scale(scale, scale);
   g.translate(-centerX, -centerY);
@@ -259,7 +308,7 @@ function drawPin(state, userImage) {
   if (state.borderWidth > 0) {
     g.save();
     g.clip(path);
-    g.lineWidth = (state.borderWidth * 2) / scale;
+    g.lineWidth = renderLineWidth;
     g.strokeStyle = state.borderColor;
     g.lineJoin = state.lineJoin;
     g.stroke(path);
@@ -279,8 +328,14 @@ function drawPin(state, userImage) {
     const radius = inner.r * scale; // note: inner.r is already in canvas px based on width/height
     const innerRadius = radius - state.borderWidth;
     const yOffsetPixel = innerRadius * (state.imageOffsetY / 100);
+    const renderImageAreaCenterX = imageAreaCenterX * renderScale;
+    const renderImageAreaCenterY = imageAreaCenterY * renderScale;
+    const renderDrawWidth = drawWidth * renderScale;
+    const renderDrawHeight = drawHeight * renderScale;
+    const renderYOffsetPixel = yOffsetPixel * renderScale;
 
     g.save();
+    g.scale(renderScale, renderScale);
     g.translate(shapeAxisX, shapeAxisY);
     g.scale(scale, scale);
     g.translate(-centerX, -centerY);
@@ -288,15 +343,102 @@ function drawPin(state, userImage) {
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.drawImage(
       img,
-      imageAreaCenterX - drawWidth / 2,
-      imageAreaCenterY - drawHeight / 2 + yOffsetPixel,
-      drawWidth,
-      drawHeight
+      renderImageAreaCenterX - renderDrawWidth / 2,
+      renderImageAreaCenterY - renderDrawHeight / 2 + renderYOffsetPixel,
+      renderDrawWidth,
+      renderDrawHeight
     );
     g.restore();
   }
 
-  return canvas;
+  return {
+    width: renderSize.width,
+    height: renderSize.height,
+    layout,
+  };
+}
+
+function drawOversampledCanvas(state, userImage) {
+  const layout = getLayout(state);
+  const renderSize = assertRenderSize(state, layout);
+  const canvas = createCanvas(renderSize.width, renderSize.height);
+  drawPinLayers(canvas, state, userImage);
+  return { canvas, layout };
+}
+
+async function downsampleCanvas(oversampledCanvas, layout, state) {
+  const targetWidth = layout.width;
+  const targetHeight = layout.height;
+
+  if (
+    oversampledCanvas.width === targetWidth &&
+    oversampledCanvas.height === targetHeight
+  ) {
+    return oversampledCanvas;
+  }
+
+  if (state.resizeStrategy === "sharp-lanczos3") {
+    if (!sharp) {
+      throw new Error("sharp is not available for resizeStrategy=sharp-lanczos3");
+    }
+    const buffer = await sharp(oversampledCanvas.toBuffer("image/png"))
+      .resize({
+        width: targetWidth,
+        height: targetHeight,
+        fit: "fill",
+        kernel: sharp.kernel.lanczos3,
+      })
+      .png()
+      .toBuffer();
+    const finalCanvas = createCanvas(targetWidth, targetHeight);
+    const g = finalCanvas.getContext("2d");
+    const img = await loadImage(buffer);
+    g.drawImage(img, 0, 0, targetWidth, targetHeight);
+    return finalCanvas;
+  }
+
+  const finalCanvas = createCanvas(targetWidth, targetHeight);
+  const g = finalCanvas.getContext("2d");
+  g.clearRect(0, 0, targetWidth, targetHeight);
+
+  if (state.resizeStrategy === "pixelated") {
+    g.imageSmoothingEnabled = false;
+  } else {
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = "high";
+  }
+
+  let source = oversampledCanvas;
+  if (state.resizeStrategy === "step-down") {
+    while (
+      source.width / 2 >= targetWidth * 1.2 &&
+      source.height / 2 >= targetHeight * 1.2
+    ) {
+      const nextWidth = Math.max(targetWidth, Math.ceil(source.width / 2));
+      const nextHeight = Math.max(targetHeight, Math.ceil(source.height / 2));
+      const stepCanvas = createCanvas(nextWidth, nextHeight);
+      const stepCtx = stepCanvas.getContext("2d");
+      stepCtx.imageSmoothingEnabled = true;
+      stepCtx.imageSmoothingQuality = "high";
+      stepCtx.drawImage(source, 0, 0, nextWidth, nextHeight);
+      source = stepCanvas;
+    }
+  }
+
+  g.drawImage(source, 0, 0, targetWidth, targetHeight);
+  return finalCanvas;
+}
+
+async function renderComposite(state, userImage) {
+  const layout = getLayout(state);
+  const { canvas: oversampledCanvas } = drawOversampledCanvas(state, userImage);
+  const finalCanvas = await downsampleCanvas(
+    oversampledCanvas,
+    layout,
+    state
+  );
+  const buffer = finalCanvas.toBuffer("image/png");
+  return { canvas: finalCanvas, buffer, layout };
 }
 
 // ─── 图片加载工具 ──────────────────────────────────────────────────────────────
@@ -339,14 +481,13 @@ app.get("/icon", async (req, res) => {
       userImage = await loadImageFromUrl(state.imageUrl);
     }
 
-    const canvas = drawPin(state, userImage);
-    const buffer = canvas.toBuffer("image/png");
+    const { canvas, buffer, layout } = await renderComposite(state, userImage);
 
     res.set({
       "Content-Type": "image/png",
       "Content-Length": buffer.length,
-      "X-Icon-Width": canvas.width,
-      "X-Icon-Height": canvas.height,
+      "X-Icon-Width": layout.width,
+      "X-Icon-Height": layout.height,
       "Cache-Control": "no-cache",
     });
     res.send(buffer);
@@ -396,14 +537,13 @@ app.post("/icon", upload.single("image"), async (req, res) => {
       userImage = await loadImageFromUrl(state.imageUrl);
     }
 
-    const canvas = drawPin(state, userImage);
-    const buffer = canvas.toBuffer("image/png");
+    const { buffer, layout } = await renderComposite(state, userImage);
 
     res.set({
       "Content-Type": "image/png",
       "Content-Length": buffer.length,
-      "X-Icon-Width": canvas.width,
-      "X-Icon-Height": canvas.height,
+      "X-Icon-Width": layout.width,
+      "X-Icon-Height": layout.height,
       "Cache-Control": "no-cache",
     });
     res.send(buffer);
@@ -420,10 +560,13 @@ app.get("/info", (req, res) => {
   try {
     const state = parseState(req.query);
     const layout = getLayout(state);
+    const renderSize = getRenderSize(state, layout);
     res.json({
       state,
       width: layout.width,
       height: layout.height,
+      renderWidth: renderSize.width,
+      renderHeight: renderSize.height,
       shapeWidth: Math.round(layout.shapeWidth),
       shapeHeight: Math.round(layout.shapeHeight),
       scale: layout.scale,
@@ -441,7 +584,9 @@ function startServer(port = PORT) {
   return app.listen(port, () => {
     console.log(`Pin Icon Server listening on http://localhost:${port}`);
     console.log(`  GET  /ui.html`);
-    console.log(`  GET  /icon?shape=pin&iconSize=128&borderColor=%23ef4444`);
+    console.log(
+      `  GET  /icon?shape=pin&iconSize=128&borderColor=%23ef4444&antiAliasScale=2`
+    );
     console.log(`  POST /icon  (multipart/form-data, image field)`);
     console.log(`  GET  /info?shape=pin&iconSize=128`);
   });

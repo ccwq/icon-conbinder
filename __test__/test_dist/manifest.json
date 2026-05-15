@@ -8,7 +8,9 @@
     "imageScale": 1,
     "imageOffsetY": 0,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 1,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "pin-marker-tight",
@@ -19,7 +21,9 @@
     "imageScale": 0.85,
     "imageOffsetY": -10,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 1,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "pin-gift-wide",
@@ -30,7 +34,9 @@
     "imageScale": 1.1,
     "imageOffsetY": 8,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 1,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "pin-heart-large",
@@ -41,7 +47,9 @@
     "imageScale": 1.2,
     "imageOffsetY": -6,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 1,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "pin-museum-small",
@@ -52,7 +60,9 @@
     "imageScale": 0.75,
     "imageOffsetY": 4,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 1,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "pin-park-soft",
@@ -63,7 +73,9 @@
     "imageScale": 0.95,
     "imageOffsetY": 12,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 1,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "pin-library-bottom",
@@ -74,7 +86,9 @@
     "imageScale": 1.05,
     "imageOffsetY": -12,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 1,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "pin-fuel-center",
@@ -85,7 +99,9 @@
     "imageScale": 0.9,
     "imageOffsetY": 0,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 1,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "pin-grocery-offset",
@@ -96,7 +112,9 @@
     "imageScale": 1,
     "imageOffsetY": 15,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 1,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "pin-harbor-compact",
@@ -107,7 +125,9 @@
     "imageScale": 1.15,
     "imageOffsetY": -15,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 1,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "circle-marker",
@@ -118,7 +138,9 @@
     "imageScale": 1,
     "imageOffsetY": 0,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 2,
+    "resizeStrategy": "pixelated"
   },
   {
     "name": "circle-marker-tight",
@@ -129,7 +151,9 @@
     "imageScale": 0.85,
     "imageOffsetY": -10,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 2,
+    "resizeStrategy": "pixelated"
   },
   {
     "name": "circle-gift-wide",
@@ -140,7 +164,9 @@
     "imageScale": 1.1,
     "imageOffsetY": 8,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 2,
+    "resizeStrategy": "pixelated"
   },
   {
     "name": "circle-heart-large",
@@ -151,7 +177,9 @@
     "imageScale": 1.2,
     "imageOffsetY": -6,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 2,
+    "resizeStrategy": "pixelated"
   },
   {
     "name": "circle-museum-small",
@@ -162,7 +190,9 @@
     "imageScale": 0.75,
     "imageOffsetY": 4,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 2,
+    "resizeStrategy": "pixelated"
   },
   {
     "name": "circle-park-soft",
@@ -173,7 +203,9 @@
     "imageScale": 0.95,
     "imageOffsetY": 12,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 2,
+    "resizeStrategy": "pixelated"
   },
   {
     "name": "circle-library-bottom",
@@ -184,7 +216,9 @@
     "imageScale": 1.05,
     "imageOffsetY": -12,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 2,
+    "resizeStrategy": "pixelated"
   },
   {
     "name": "circle-fuel-center",
@@ -195,7 +229,9 @@
     "imageScale": 0.9,
     "imageOffsetY": 0,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 2,
+    "resizeStrategy": "pixelated"
   },
   {
     "name": "circle-grocery-offset",
@@ -206,7 +242,9 @@
     "imageScale": 1,
     "imageOffsetY": 15,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 2,
+    "resizeStrategy": "pixelated"
   },
   {
     "name": "circle-harbor-compact",
@@ -217,7 +255,9 @@
     "imageScale": 1.15,
     "imageOffsetY": -15,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 2,
+    "resizeStrategy": "pixelated"
   },
   {
     "name": "square-marker",
@@ -228,7 +268,9 @@
     "imageScale": 1,
     "imageOffsetY": 0,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 4,
+    "resizeStrategy": "step-down"
   },
   {
     "name": "square-marker-tight",
@@ -239,7 +281,9 @@
     "imageScale": 0.85,
     "imageOffsetY": -10,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 4,
+    "resizeStrategy": "step-down"
   },
   {
     "name": "square-gift-wide",
@@ -250,7 +294,9 @@
     "imageScale": 1.1,
     "imageOffsetY": 8,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 4,
+    "resizeStrategy": "step-down"
   },
   {
     "name": "square-heart-large",
@@ -261,7 +307,9 @@
     "imageScale": 1.2,
     "imageOffsetY": -6,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 4,
+    "resizeStrategy": "step-down"
   },
   {
     "name": "square-museum-small",
@@ -272,7 +320,9 @@
     "imageScale": 0.75,
     "imageOffsetY": 4,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 4,
+    "resizeStrategy": "step-down"
   },
   {
     "name": "square-park-soft",
@@ -283,7 +333,9 @@
     "imageScale": 0.95,
     "imageOffsetY": 12,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 4,
+    "resizeStrategy": "step-down"
   },
   {
     "name": "square-library-bottom",
@@ -294,7 +346,9 @@
     "imageScale": 1.05,
     "imageOffsetY": -12,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 4,
+    "resizeStrategy": "step-down"
   },
   {
     "name": "square-fuel-center",
@@ -305,7 +359,9 @@
     "imageScale": 0.9,
     "imageOffsetY": 0,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 4,
+    "resizeStrategy": "step-down"
   },
   {
     "name": "square-grocery-offset",
@@ -316,7 +372,9 @@
     "imageScale": 1,
     "imageOffsetY": 15,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 4,
+    "resizeStrategy": "step-down"
   },
   {
     "name": "square-harbor-compact",
@@ -327,7 +385,9 @@
     "imageScale": 1.15,
     "imageOffsetY": -15,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 4,
+    "resizeStrategy": "step-down"
   },
   {
     "name": "squircle-marker",
@@ -338,7 +398,9 @@
     "imageScale": 1,
     "imageOffsetY": 0,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 2,
+    "resizeStrategy": "sharp-lanczos3"
   },
   {
     "name": "squircle-marker-tight",
@@ -349,7 +411,9 @@
     "imageScale": 0.85,
     "imageOffsetY": -10,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 2,
+    "resizeStrategy": "sharp-lanczos3"
   },
   {
     "name": "squircle-gift-wide",
@@ -360,7 +424,9 @@
     "imageScale": 1.1,
     "imageOffsetY": 8,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 2,
+    "resizeStrategy": "sharp-lanczos3"
   },
   {
     "name": "squircle-heart-large",
@@ -371,7 +437,9 @@
     "imageScale": 1.2,
     "imageOffsetY": -6,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 2,
+    "resizeStrategy": "sharp-lanczos3"
   },
   {
     "name": "squircle-museum-small",
@@ -382,7 +450,9 @@
     "imageScale": 0.75,
     "imageOffsetY": 4,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 2,
+    "resizeStrategy": "sharp-lanczos3"
   },
   {
     "name": "squircle-park-soft",
@@ -393,7 +463,9 @@
     "imageScale": 0.95,
     "imageOffsetY": 12,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 2,
+    "resizeStrategy": "sharp-lanczos3"
   },
   {
     "name": "squircle-library-bottom",
@@ -404,7 +476,9 @@
     "imageScale": 1.05,
     "imageOffsetY": -12,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 2,
+    "resizeStrategy": "sharp-lanczos3"
   },
   {
     "name": "squircle-fuel-center",
@@ -415,7 +489,9 @@
     "imageScale": 0.9,
     "imageOffsetY": 0,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 2,
+    "resizeStrategy": "sharp-lanczos3"
   },
   {
     "name": "squircle-grocery-offset",
@@ -426,7 +502,9 @@
     "imageScale": 1,
     "imageOffsetY": 15,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 2,
+    "resizeStrategy": "sharp-lanczos3"
   },
   {
     "name": "squircle-harbor-compact",
@@ -437,7 +515,9 @@
     "imageScale": 1.15,
     "imageOffsetY": -15,
     "exportSquare": 1,
-    "exportStrategy": "center"
+    "exportStrategy": "center",
+    "antiAliasScale": 2,
+    "resizeStrategy": "sharp-lanczos3"
   },
   {
     "name": "hexagon-marker",
@@ -448,7 +528,9 @@
     "imageScale": 1,
     "imageOffsetY": 0,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 4,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "hexagon-marker-tight",
@@ -459,7 +541,9 @@
     "imageScale": 0.85,
     "imageOffsetY": -10,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 4,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "hexagon-gift-wide",
@@ -470,7 +554,9 @@
     "imageScale": 1.1,
     "imageOffsetY": 8,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 4,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "hexagon-heart-large",
@@ -481,7 +567,9 @@
     "imageScale": 1.2,
     "imageOffsetY": -6,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 4,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "hexagon-museum-small",
@@ -492,7 +580,9 @@
     "imageScale": 0.75,
     "imageOffsetY": 4,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 4,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "hexagon-park-soft",
@@ -503,7 +593,9 @@
     "imageScale": 0.95,
     "imageOffsetY": 12,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 4,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "hexagon-library-bottom",
@@ -514,7 +606,9 @@
     "imageScale": 1.05,
     "imageOffsetY": -12,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 4,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "hexagon-fuel-center",
@@ -525,7 +619,9 @@
     "imageScale": 0.9,
     "imageOffsetY": 0,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 4,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "hexagon-grocery-offset",
@@ -536,7 +632,9 @@
     "imageScale": 1,
     "imageOffsetY": 15,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 4,
+    "resizeStrategy": "smooth-high"
   },
   {
     "name": "hexagon-harbor-compact",
@@ -547,6 +645,8 @@
     "imageScale": 1.15,
     "imageOffsetY": -15,
     "exportSquare": 0,
-    "exportStrategy": "bottom"
+    "exportStrategy": "bottom",
+    "antiAliasScale": 4,
+    "resizeStrategy": "smooth-high"
   }
 ]

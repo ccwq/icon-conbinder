@@ -77,11 +77,11 @@ async function readBaseIcon() {
 }
 
 const shapeMatrix = [
-  { shape: "pin", iconSize: 24, borderWidth: 2, exportSquare: 1, exportStrategy: "center", enableShadow: 0, shadowBlur: 0, shadowOffsetY: 0 },
-  { shape: "circle", iconSize: 28, borderWidth: 1, exportSquare: 0, exportStrategy: "bottom", enableShadow: 1, shadowBlur: 2, shadowOffsetY: 1 },
-  { shape: "square", iconSize: 30, borderWidth: 4, exportSquare: 1, exportStrategy: "center", enableShadow: 0, shadowBlur: 0, shadowOffsetY: 0 },
-  { shape: "squircle", iconSize: 26, borderWidth: 2, exportSquare: 1, exportStrategy: "center", enableShadow: 1, shadowBlur: 3, shadowOffsetY: 2 },
-  { shape: "hexagon", iconSize: 20, borderWidth: 1, exportSquare: 0, exportStrategy: "bottom", enableShadow: 1, shadowBlur: 3, shadowOffsetY: -2 },
+  { shape: "pin", iconSize: 24, borderWidth: 2, exportSquare: 1, exportStrategy: "center", enableShadow: 0, shadowBlur: 0, shadowOffsetY: 0, antiAliasScale: 1, resizeStrategy: "smooth-high" },
+  { shape: "circle", iconSize: 28, borderWidth: 1, exportSquare: 0, exportStrategy: "bottom", enableShadow: 1, shadowBlur: 2, shadowOffsetY: 1, antiAliasScale: 2, resizeStrategy: "pixelated" },
+  { shape: "square", iconSize: 30, borderWidth: 4, exportSquare: 1, exportStrategy: "center", enableShadow: 0, shadowBlur: 0, shadowOffsetY: 0, antiAliasScale: 4, resizeStrategy: "step-down" },
+  { shape: "squircle", iconSize: 26, borderWidth: 2, exportSquare: 1, exportStrategy: "center", enableShadow: 1, shadowBlur: 3, shadowOffsetY: 2, antiAliasScale: 2, resizeStrategy: "sharp-lanczos3" },
+  { shape: "hexagon", iconSize: 20, borderWidth: 1, exportSquare: 0, exportStrategy: "bottom", enableShadow: 1, shadowBlur: 3, shadowOffsetY: -2, antiAliasScale: 4, resizeStrategy: "smooth-high" },
 ];
 
 const iconVariants = [
@@ -119,6 +119,8 @@ test("POST /icon writes 50 composed PNG files under 50px", async () => {
           shadowOffsetY: String(shapeCase.shadowOffsetY),
           exportSquare: String(shapeCase.exportSquare),
           exportStrategy: shapeCase.exportStrategy,
+          antiAliasScale: String(shapeCase.antiAliasScale),
+          resizeStrategy: shapeCase.resizeStrategy,
         };
         const multipart = buildMultipartForm(fields, {
           name: "image",
@@ -156,6 +158,8 @@ test("POST /icon writes 50 composed PNG files under 50px", async () => {
           imageOffsetY: iconCase.imageOffsetY,
           exportSquare: shapeCase.exportSquare,
           exportStrategy: shapeCase.exportStrategy,
+          antiAliasScale: shapeCase.antiAliasScale,
+          resizeStrategy: shapeCase.resizeStrategy,
         });
       }
     }
@@ -197,6 +201,29 @@ test("GET /ui.html renders the pug template page", async () => {
     assert.match(html, /\/info/);
     assert.match(html, /"shape":"circle"/);
     assert.match(html, /"iconSize":160/);
+    assert.match(html, /antiAliasScale/);
+    assert.match(html, /resizeStrategy/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("GET /info exposes anti-alias render dimensions", async () => {
+  const server = app.listen(0);
+
+  try {
+    const res = await request(
+      server,
+      "GET",
+      "/info?shape=pin&iconSize=24&antiAliasScale=4&resizeStrategy=sharp-lanczos3"
+    );
+
+    assert.equal(res.statusCode, 200);
+    const info = JSON.parse(res.body.toString("utf8"));
+    assert.equal(info.state.antiAliasScale, 4);
+    assert.equal(info.state.resizeStrategy, "sharp-lanczos3");
+    assert.equal(info.renderWidth, info.width * 4);
+    assert.equal(info.renderHeight, info.height * 4);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
