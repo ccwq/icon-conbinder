@@ -22,12 +22,19 @@ node server.js
 
 通过 `.env` 控制端口、CORS、请求参数默认值和 `image` 解析规则；`.env.example` 保持同样结构，直接复制后修改即可。
 
+开发模式会同时启动主服务和独立的测试图床：
+
+```bash
+npm run dev
+```
+
 - `PORT`：服务监听端口，默认 `3000`
 - `ENABLE_CORS`：是否开启全局 CORS，默认 `0`
 - `ICON_PARAM_*`：请求参数默认值、候选值和范围都写在 `.env` / `.env.example` 里，运行时优先读取这些值
 - `IMAGE_URL_PREFIX`：`image` 取相对路径时的基础前缀，服务端会用 `new URL(image, IMAGE_URL_PREFIX)` 合成最终地址
 - `IMAGE_URL_PREFIX_ONLY`：是否要求最终解析后的 URL 必须命中 `IMAGE_URL_PREFIX`
 - `IMAGE_ENABLE_BASE64`：是否允许 `image` 传入 `data:image/*;base64,...`
+- `IMG_BED_BASE_URL`：`ui.html` 里 GET 模式文件上传要用的独立图床地址，`npm run dev` 默认注入 `http://127.0.0.1:3001`
 - `ENABLE_CORS=1` 时，`/ui.html`、`/icon`、`/info` 都会带上 CORS 响应头
 
 ---
@@ -43,7 +50,7 @@ node server.js
 - 复制区会输出当前状态对应的请求文本
 - 抗锯齿区可以选择离屏超采样倍率和缩小策略；预览固定 `1x`，导出和复制请求按当前选择生效
 - `image` 输入支持完整 URL、相对路径和 `data:image/*;base64,...`；相对路径可结合 `IMAGE_URL_PREFIX` 合成
-- 图片来源卡支持 `GET / POST` 切换，整个卡片可拖放文件；当 `GET` 且 `IMAGE_ENABLE_BASE64=0` 时，上传入口会禁用并提示原因
+- 图片来源卡支持 `GET / POST` 切换，整个卡片可拖放文件；`GET` 模式下选文件会先上传到独立的测试图床，再把返回的短 URL 写入 `image`
 - 当 `ENABLE_CORS=1` 时，页面和图像接口都可以跨域访问
 
 可直接打开：
@@ -97,6 +104,31 @@ GET /icon?shape=squircle&iconSize=200&image=/logo.png
 
 ---
 
+### POST `/__imgbed/upload`
+
+本地图床测试接口。上传 `image` 文件后，返回一个当前服务进程内可访问的短 URL，适合给 `GET /icon?image=...` 拼接使用。
+
+**curl 示例：**
+```bash
+curl -X POST http://localhost:3000/__imgbed/upload \
+  -F "image=@/path/to/your/icon.png"
+```
+
+返回示例：
+```json
+{
+  "id": "b8b6f9e9-4f0f-4d2d-ae84-1fd1bba2f1b8",
+  "path": "/__imgbed/b8b6f9e9-4f0f-4d2d-ae84-1fd1bba2f1b8",
+  "url": "http://localhost:3000/__imgbed/b8b6f9e9-4f0f-4d2d-ae84-1fd1bba2f1b8"
+}
+```
+
+### GET `/__imgbed/:id`
+
+返回上传到本地图床的原始文件。该服务仅在当前进程生命周期内有效，重启后失效。
+
+---
+
 ### POST `/icon`
 
 使用 `multipart/form-data` 上传本地图片，其他参数与 GET 相同（通过表单字段或 query string 传递）。
@@ -135,6 +167,22 @@ curl -X POST http://localhost:3000/icon \
   "scale": 6.4
 }
 ```
+
+---
+
+## 测试图床
+
+开发时会单独启动一个测试图床服务，供 `ui.html` 的 `GET` 模式上传文件后拿短 URL 使用。
+
+### POST `http://localhost:3001/upload`
+
+上传 `image` 文件，返回可直接拼进 `GET /icon?image=...` 的短 URL。
+
+### GET `http://localhost:3001/:id`
+
+返回上传后的原始文件。
+
+这个服务只用于本地测试，不建议作为正式接口依赖。
 
 ---
 

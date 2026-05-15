@@ -435,8 +435,19 @@ test("GET /icon accepts data URLs when IMAGE_ENABLE_BASE64 is on", async () => {
 });
 
 test("GET /icon rejects data URLs when IMAGE_ENABLE_BASE64 is off", async () => {
+  const envKeys = ["IMAGE_URL_PREFIX", "IMAGE_URL_PREFIX_ONLY", "IMAGE_ENABLE_BASE64"];
+  const snapshot = snapshotEnv(envKeys);
   const imageDataUrl = `data:image/png;base64,${(await readBaseIcon()).toString("base64")}`;
-  const server = app.listen(0);
+
+  Object.assign(process.env, {
+    IMAGE_URL_PREFIX: "",
+    IMAGE_URL_PREFIX_ONLY: "0",
+    IMAGE_ENABLE_BASE64: "0",
+  });
+
+  delete require.cache[require.resolve("../server")];
+  const { app: base64DisabledApp } = require("../server");
+  const server = base64DisabledApp.listen(0);
 
   try {
     const res = await request(
@@ -451,6 +462,8 @@ test("GET /icon rejects data URLs when IMAGE_ENABLE_BASE64 is off", async () => 
     assert.match(payload.error, /IMAGE_ENABLE_BASE64/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
+    restoreEnv(snapshot, envKeys);
+    delete require.cache[require.resolve("../server")];
   }
 });
 

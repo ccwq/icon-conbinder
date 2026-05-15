@@ -85,6 +85,7 @@ const ENABLE_CORS = readEnvBool("ENABLE_CORS", false);
 const IMAGE_URL_PREFIX = readEnvString("IMAGE_URL_PREFIX", "");
 const IMAGE_URL_PREFIX_ONLY = readEnvBool("IMAGE_URL_PREFIX_ONLY", false);
 const IMAGE_ENABLE_BASE64 = readEnvBool("IMAGE_ENABLE_BASE64", false);
+const IMG_BED_BASE_URL = readEnvString("IMG_BED_BASE_URL", "");
 
 function clientError(code, message) {
   const error = new Error(message);
@@ -786,18 +787,23 @@ app.get("/icon", async (req, res) => {
  */
 app.get("/ui.html", (req, res) => {
   try {
+    const imageBedUploadUrl = IMG_BED_BASE_URL
+      ? new URL("upload", normalizeUrlPrefix(IMG_BED_BASE_URL)).toString()
+      : "";
     const state = parseState(req.query);
     res.render("ui", {
       title: "Pin Icon UI",
       apiBaseUrl: `${req.protocol}://${req.get("host")}`,
       apiIconPath: "/icon",
       apiInfoPath: "/info",
+      apiImageBedUploadUrl: imageBedUploadUrl,
       state,
       shapeOptions: SHAPE_OPTIONS,
       pageDataJson: JSON.stringify({
         apiBaseUrl: `${req.protocol}://${req.get("host")}`,
         apiIconPath: "/icon",
         apiInfoPath: "/info",
+        apiImageBedUploadUrl: imageBedUploadUrl,
         imageEnableBase64: IMAGE_ENABLE_BASE64,
         state,
         shapeOptions: SHAPE_OPTIONS,

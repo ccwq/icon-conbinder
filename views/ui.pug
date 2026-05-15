@@ -919,6 +919,7 @@ html(lang="zh")
         const apiBaseUrl = config.apiBaseUrl;
         const apiIconUrl = `${apiBaseUrl}${config.apiIconPath}`;
         const apiInfoUrl = `${apiBaseUrl}${config.apiInfoPath}`;
+        const apiImageBedUploadUrl = config.apiImageBedUploadUrl || "";
         const imageEnableBase64 = !!config.imageEnableBase64;
         const shapeLabels = Object.fromEntries((config.shapeOptions || []).map((item) => [item.value, item.label]));
         const lineJoinLabels = {
@@ -1021,14 +1022,14 @@ html(lang="zh")
         };
 
         const getUploadDisabledReason = () => {
-          if (state.imageMode === "get" && !imageEnableBase64) {
-            return "当前为 GET 且未开启 IMAGE_ENABLE_BASE64，无法输入图像";
+          if (state.imageMode === "get" && !apiImageBedUploadUrl) {
+            return "当前未启动本地图床服务，GET 模式下无法上传文件";
           }
           return "";
         };
 
         const isUploadEnabled = () => {
-          return state.imageMode === "post" || imageEnableBase64;
+          return state.imageMode === "post" || !!apiImageBedUploadUrl;
         };
 
         const revokeFilePreview = () => {
@@ -1055,12 +1056,22 @@ html(lang="zh")
           refreshAll();
         };
 
-        const readFileAsDataUrl = (file) => new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result || ""));
-          reader.onerror = () => reject(reader.error || new Error("文件读取失败"));
-          reader.readAsDataURL(file);
-        });
+        const uploadFileToBed = async (file) => {
+          const formData = new FormData();
+          formData.set("image", file, file.name);
+          const res = await fetch(apiImageBedUploadUrl, {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) {
+            throw new Error(`imgbed ${res.status}`);
+          }
+          const payload = await res.json();
+          if (!payload || !payload.url) {
+            throw new Error("imgbed 响应缺少 url");
+          }
+          return payload.url;
+        };
 
         const setPreviewFromFile = async (file) => {
           if (!file) return;
@@ -1073,7 +1084,7 @@ html(lang="zh")
             state.image = "";
           } else {
             state.file = null;
-            state.image = await readFileAsDataUrl(file);
+            state.image = await uploadFileToBed(file);
           }
 
           refreshAll();
@@ -1110,8 +1121,8 @@ html(lang="zh")
           els.uploadHint.textContent = uploadDisabledReason || (isPost
             ? "POST 模式下选择文件后会使用 multipart 文件上传。"
             : (imageEnableBase64
-              ? "GET 模式可直接输入 URL / 相对路径，或选择文件转成 `data:`。"
-              : "GET 模式下只能输入 URL / 相对路径。"));
+              ? "GET 模式可直接输入 URL / 相对路径；选文件会先上传到本地图床并写入短 URL，也可粘贴 `data:`。"
+              : "GET 模式可直接输入 URL / 相对路径；选文件会先上传到本地图床并写入短 URL。"));
           els.imageUpload.disabled = !uploadEnabled;
           els.imageUploadButton.classList.toggle("disabled", !uploadEnabled);
           els.imageUploadButton.setAttribute("aria-disabled", uploadEnabled ? "false" : "true");
@@ -1167,9 +1178,9 @@ html(lang="zh")
 
           els.imageNote.textContent = state.imageMode === "post"
             ? "POST 模式下图片通过文件上传；若切回 GET，会清空文件状态。"
-            : imageEnableBase64
-              ? "GET 模式支持 URL / 相对路径；选文件会转成 data URL 写入 `image`。"
-              : "GET 模式仅支持 URL / 相对路径；文件上传入口已禁用。";
+            : (apiImageBedUploadUrl
+              ? "GET 模式支持 URL / 相对路径；选文件会先上传到本地图床并把短 URL 写入 `image`。"
+              : "GET 模式支持 URL / 相对路径；需先启动本地图床服务才可选择文件上传。");
         };
 
         const buildQueryParams = () => {
@@ -1266,8 +1277,8 @@ html(lang="zh")
               ? "POST 模式使用 file 上传；复制内容为 multipart `curl` 请求。"
               : "POST 模式需要先选择文件；复制文本会给出文件上传模板。")
             : (imageEnableBase64
-              ? "GET 模式复制查询串；也可以选择文件转成 `data:`。"
-              : "GET 模式复制查询串；文件上传入口已禁用。");
+              ? "GET 模式复制查询串；选文件会先上传到本地图床并写入短 URL，也可以直接粘贴 `data:`。"
+              : "GET 模式复制查询串；选文件会先上传到本地图床并写入短 URL。");
           els.previewMode.textContent = state.imageMode.toUpperCase();
         };
 
@@ -1404,7 +1415,12 @@ html(lang="zh")
 
         els.imageUpload.addEventListener("change", async (event) => {
           const file = event.target.files && event.target.files[0];
-          await handleFile(file);
+          try {
+            await handleFile(file);
+          } catch (error) {
+            els.previewStatus.textContent = "图床失败";
+            els.previewTip.textContent = error.message;
+          }
           event.target.value = "";
         });
 
@@ -1423,7 +1439,12 @@ html(lang="zh")
           if (!isUploadEnabled()) return;
           els.sourceCard.classList.remove("drag");
           const file = event.dataTransfer.files && event.dataTransfer.files[0];
-          await handleFile(file);
+          try {
+            await handleFile(file);
+          } catch (error) {
+            els.previewStatus.textContent = "图床失败";
+            els.previewTip.textContent = error.message;
+          }
         });
 
         const copyCurrentRequest = async () => {
