@@ -14,6 +14,12 @@
  * lineJoin       {string}  round|miter|bevel (default: round)
  * borderColor    {string}  #rrggbb (default: #ef4444)
  * bgColor        {string}  #rrggbb (default: #ffffff)
+ * contourEnhance {0|1}     轮廓多层抗锯齿增强 (default: 1)
+ * contourOuterGlow {number} 外侧柔光/晕染强度 (default: 2)
+ * contourOuterWidth {number} 外扩描边宽度 (default: 6)
+ * contourMainWidth {number} 主轮廓描边宽度 (default: 3)
+ * contourInnerWidth {number} 内侧柔化宽度 (default: 1)
+ * contourCornerSoftness {number} 尖角圆润度 0~1 (default: 0.12)
  * enableShadow   {0|1}     (default: 1)
  * shadowBlur     {number}  (default: 10)
  * shadowOffsetY  {number}  (default: 5)
@@ -92,6 +98,19 @@ function clientError(code, message) {
   error.statusCode = 400;
   error.code = code;
   return error;
+}
+
+function hexToRgba(hex, alpha) {
+  const match = /^#([0-9a-fA-F]{6})$/.exec(String(hex || ""));
+  if (!match) {
+    return `rgba(0, 0, 0, ${alpha})`;
+  }
+
+  const value = match[1];
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function normalizeUrlPrefix(prefix) {
@@ -311,6 +330,17 @@ function parseState(query) {
     bgColor: /^#[0-9a-fA-F]{6}$/.test(bgColorDefault)
       ? bgColorDefault
       : "#ffffff",
+    contourEnhance: readEnvBool("ICON_PARAM_CONTOUR_ENHANCE", true),
+    contourOuterGlow: readEnvFloat("ICON_PARAM_CONTOUR_OUTER_GLOW", 2, 0, 20),
+    contourOuterWidth: readEnvFloat("ICON_PARAM_CONTOUR_OUTER_WIDTH", 6, 0, 20),
+    contourMainWidth: readEnvFloat("ICON_PARAM_CONTOUR_MAIN_WIDTH", 3, 0, 20),
+    contourInnerWidth: readEnvFloat("ICON_PARAM_CONTOUR_INNER_WIDTH", 1, 0, 20),
+    contourCornerSoftness: readEnvFloat(
+      "ICON_PARAM_CONTOUR_CORNER_SOFTNESS",
+      0.12,
+      0,
+      1
+    ),
     enableShadow: readEnvBool("ICON_PARAM_ENABLE_SHADOW", true),
     shadowBlur: readEnvFloat("ICON_PARAM_SHADOW_BLUR", 10, 0, 50),
     shadowOffsetY: readEnvFloat("ICON_PARAM_SHADOW_OFFSET_Y", 5, -20, 20),
@@ -363,6 +393,45 @@ function parseState(query) {
     bgColor: /^#[0-9a-fA-F]{6}$/.test(query.bgColor)
       ? query.bgColor
       : defaults.bgColor,
+    contourEnhance: bool(query.contourEnhance, defaults.contourEnhance),
+    contourOuterGlow: clamp(
+      query.contourOuterGlow === undefined
+        ? defaults.contourOuterGlow
+        : parseFloatOrFallback(query.contourOuterGlow, defaults.contourOuterGlow),
+      0,
+      20
+    ),
+    contourOuterWidth: clamp(
+      query.contourOuterWidth === undefined
+        ? defaults.contourOuterWidth
+        : parseFloatOrFallback(query.contourOuterWidth, defaults.contourOuterWidth),
+      0,
+      20
+    ),
+    contourMainWidth: clamp(
+      query.contourMainWidth === undefined
+        ? defaults.contourMainWidth
+        : parseFloatOrFallback(query.contourMainWidth, defaults.contourMainWidth),
+      0,
+      20
+    ),
+    contourInnerWidth: clamp(
+      query.contourInnerWidth === undefined
+        ? defaults.contourInnerWidth
+        : parseFloatOrFallback(query.contourInnerWidth, defaults.contourInnerWidth),
+      0,
+      20
+    ),
+    contourCornerSoftness: clamp(
+      query.contourCornerSoftness === undefined
+        ? defaults.contourCornerSoftness
+        : parseFloatOrFallback(
+            query.contourCornerSoftness,
+            defaults.contourCornerSoftness
+          ),
+      0,
+      1
+    ),
     enableShadow: bool(query.enableShadow, defaults.enableShadow),
     shadowBlur: clamp(
       query.shadowBlur === undefined
@@ -405,6 +474,7 @@ function getLayout(state) {
   const shapeWidth = bboxWidth * scale;
   const shapeHeight = bboxHeight * scale;
   const strokePad = Math.max(0, state.borderWidth);
+  const contourPad = 0;
   const shadowSpread = state.enableShadow
     ? Math.max(0, Math.ceil(state.shadowBlur * 1.5))
     : 0;
@@ -416,10 +486,10 @@ function getLayout(state) {
   const shadowExtraRight = shadowSpread + Math.max(0, shadowOffsetX);
   const shadowExtraTop = shadowSpread + Math.max(0, -shadowOffsetY);
   const shadowExtraBottom = shadowSpread + Math.max(0, shadowOffsetY);
-  const leftPad = Math.ceil(strokePad + shadowExtraLeft);
-  const rightPad = Math.ceil(strokePad + shadowExtraRight);
-  const topPad = Math.ceil(strokePad + shadowExtraTop);
-  const bottomPad = Math.ceil(strokePad + shadowExtraBottom);
+  const leftPad = Math.ceil(strokePad + shadowExtraLeft + contourPad);
+  const rightPad = Math.ceil(strokePad + shadowExtraRight + contourPad);
+  const topPad = Math.ceil(strokePad + shadowExtraTop + contourPad);
+  const bottomPad = Math.ceil(strokePad + shadowExtraBottom + contourPad);
 
   const rectWidth = Math.ceil(shapeWidth + leftPad + rightPad);
   const rectHeight = Math.ceil(shapeHeight + topPad + bottomPad);
@@ -490,6 +560,33 @@ function getInnerCircle(shapeKey, width, height) {
   }
 }
 
+function strokeLayer(ctx, path, options = {}) {
+  const {
+    lineWidth,
+    strokeStyle,
+    lineJoin,
+    lineCap = "round",
+    blur = 0,
+    clip = false,
+  } = options;
+
+  ctx.save();
+  if (clip) {
+    ctx.clip(path);
+  }
+  ctx.lineCap = lineCap;
+  ctx.lineJoin = lineJoin || "round";
+  ctx.miterLimit = 2;
+  ctx.lineWidth = lineWidth;
+  ctx.strokeStyle = strokeStyle;
+  if (blur > 0) {
+    ctx.filter = `blur(${blur}px)`;
+  }
+  ctx.stroke(path);
+  ctx.filter = "none";
+  ctx.restore();
+}
+
 // ─── 核心渲染（移植自 HTML drawPin()）────────────────────────────────────────
 
 function drawPinLayers(targetCanvas, state, userImage) {
@@ -520,6 +617,26 @@ function drawPinLayers(targetCanvas, state, userImage) {
   const shadowY = layout.shadowOffsetY + shapePixelHeight * 0.08;
   const renderLineWidth = (state.borderWidth * 2) / (scale * renderScale);
   const renderBlur = layout.shadowSpread * renderScale;
+  const contourLineJoin = state.contourEnhance && state.contourCornerSoftness > 0
+    ? "round"
+    : state.lineJoin;
+  const contourRenderLineWidth = (value) =>
+    (Math.max(0, value) * 2) / (scale * renderScale);
+  const contourOuterGlowWidth = contourRenderLineWidth(
+    state.borderWidth + (state.contourEnhance ? state.contourOuterWidth * 0.35 : 0)
+  );
+  const contourMainWidth = contourRenderLineWidth(
+    state.borderWidth + (state.contourEnhance ? state.contourMainWidth * 0.2 : 0)
+  );
+  const contourInnerWidth = contourRenderLineWidth(
+    Math.max(0, state.borderWidth - (state.contourEnhance ? state.contourInnerWidth * 0.2 : 0))
+  );
+  const contourGlowBlur = state.contourEnhance
+    ? Math.max(0, state.contourOuterGlow * 0.5 * renderScale)
+    : 0;
+  const contourCornerBoost = state.contourEnhance
+    ? state.contourCornerSoftness * 0.35
+    : 0;
 
   // 1. 独立阴影层（与 HTML 完全相同的策略：先画阴影再画主体）
   if (state.enableShadow) {
@@ -546,7 +663,30 @@ function drawPinLayers(targetCanvas, state, userImage) {
   g.fillStyle = state.bgColor;
   g.fill(path);
 
-  if (state.borderWidth > 0) {
+  if (state.contourEnhance) {
+    strokeLayer(g, path, {
+      lineWidth: contourOuterGlowWidth + contourCornerBoost,
+      strokeStyle: hexToRgba(state.borderColor, 0.16),
+      lineJoin: contourLineJoin,
+      blur: contourGlowBlur,
+    });
+    strokeLayer(g, path, {
+      lineWidth: contourOuterGlowWidth + contourCornerBoost * 0.5,
+      strokeStyle: hexToRgba(state.borderColor, 0.34),
+      lineJoin: contourLineJoin,
+    });
+    strokeLayer(g, path, {
+      lineWidth: contourMainWidth,
+      strokeStyle: state.borderColor,
+      lineJoin: contourLineJoin,
+    });
+    strokeLayer(g, path, {
+      lineWidth: contourInnerWidth,
+      strokeStyle: hexToRgba(state.borderColor, 0.42),
+      lineJoin: contourLineJoin,
+      clip: true,
+    });
+  } else if (state.borderWidth > 0) {
     g.save();
     g.clip(path);
     g.lineWidth = renderLineWidth;

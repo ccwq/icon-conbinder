@@ -799,6 +799,54 @@ html(lang="zh")
                   option(value="miter", selected=state.lineJoin === "miter") 斜接
                   option(value="bevel", selected=state.lineJoin === "bevel") 斜角
 
+            section.section.full
+              .section-title
+                strong 轮廓增强
+                span 多层描边与柔化
+              .toggle-row
+                .field-label
+                  span 启用轮廓增强
+                  span.value#contourEnhanceValue= state.contourEnhance ? "1" : "0"
+                .switch#contourEnhanceSwitch(class=state.contourEnhance ? "on" : "")
+              .grid-2
+                .field
+                  .field-label
+                    span 外侧柔光
+                    span.value#contourOuterGlowValue= state.contourOuterGlow
+                  .range-row
+                    input#contourOuterGlowRange(type="range", min="0", max="20", step="0.1", value=state.contourOuterGlow)
+                    input#contourOuterGlowInput(type="number", min="0", max="20", step="0.1", value=state.contourOuterGlow)
+                .field
+                  .field-label
+                    span 外扩描边
+                    span.value#contourOuterWidthValue= state.contourOuterWidth
+                  .range-row
+                    input#contourOuterWidthRange(type="range", min="0", max="20", step="0.1", value=state.contourOuterWidth)
+                    input#contourOuterWidthInput(type="number", min="0", max="20", step="0.1", value=state.contourOuterWidth)
+                .field
+                  .field-label
+                    span 主轮廓描边
+                    span.value#contourMainWidthValue= state.contourMainWidth
+                  .range-row
+                    input#contourMainWidthRange(type="range", min="0", max="20", step="0.1", value=state.contourMainWidth)
+                    input#contourMainWidthInput(type="number", min="0", max="20", step="0.1", value=state.contourMainWidth)
+                .field
+                  .field-label
+                    span 内侧柔化
+                    span.value#contourInnerWidthValue= state.contourInnerWidth
+                  .range-row
+                    input#contourInnerWidthRange(type="range", min="0", max="20", step="0.1", value=state.contourInnerWidth)
+                    input#contourInnerWidthInput(type="number", min="0", max="20", step="0.1", value=state.contourInnerWidth)
+                .field
+                  .field-label
+                    span 尖角圆润度
+                    span.value#contourCornerSoftnessValue= state.contourCornerSoftness
+                  .range-row
+                    input#contourCornerSoftnessRange(type="range", min="0", max="1", step="0.01", value=state.contourCornerSoftness)
+                    input#contourCornerSoftnessInput(type="number", min="0", max="1", step="0.01", value=state.contourCornerSoftness)
+              .inline-note
+                | 默认值由 `ICON_PARAM_CONTOUR_ENHANCE`、`ICON_PARAM_CONTOUR_OUTER_GLOW`、`ICON_PARAM_CONTOUR_OUTER_WIDTH`、`ICON_PARAM_CONTOUR_MAIN_WIDTH`、`ICON_PARAM_CONTOUR_INNER_WIDTH`、`ICON_PARAM_CONTOUR_CORNER_SOFTNESS` 控制，查询串可覆盖。
+
             section.section
               .section-title
                 strong 颜色
@@ -974,6 +1022,23 @@ html(lang="zh")
           borderWidthValue: document.getElementById("borderWidthValue"),
           lineJoinSelect: document.getElementById("lineJoinSelect"),
           lineJoinValue: document.getElementById("lineJoinValue"),
+          contourEnhanceSwitch: document.getElementById("contourEnhanceSwitch"),
+          contourEnhanceValue: document.getElementById("contourEnhanceValue"),
+          contourOuterGlowRange: document.getElementById("contourOuterGlowRange"),
+          contourOuterGlowInput: document.getElementById("contourOuterGlowInput"),
+          contourOuterGlowValue: document.getElementById("contourOuterGlowValue"),
+          contourOuterWidthRange: document.getElementById("contourOuterWidthRange"),
+          contourOuterWidthInput: document.getElementById("contourOuterWidthInput"),
+          contourOuterWidthValue: document.getElementById("contourOuterWidthValue"),
+          contourMainWidthRange: document.getElementById("contourMainWidthRange"),
+          contourMainWidthInput: document.getElementById("contourMainWidthInput"),
+          contourMainWidthValue: document.getElementById("contourMainWidthValue"),
+          contourInnerWidthRange: document.getElementById("contourInnerWidthRange"),
+          contourInnerWidthInput: document.getElementById("contourInnerWidthInput"),
+          contourInnerWidthValue: document.getElementById("contourInnerWidthValue"),
+          contourCornerSoftnessRange: document.getElementById("contourCornerSoftnessRange"),
+          contourCornerSoftnessInput: document.getElementById("contourCornerSoftnessInput"),
+          contourCornerSoftnessValue: document.getElementById("contourCornerSoftnessValue"),
           borderColor: document.getElementById("borderColor"),
           borderColorHex: document.getElementById("borderColorHex"),
           bgColor: document.getElementById("bgColor"),
@@ -1145,6 +1210,23 @@ html(lang="zh")
           els.borderWidthInput.value = state.borderWidth;
           els.lineJoinSelect.value = state.lineJoin;
           els.lineJoinValue.textContent = lineJoinLabels[state.lineJoin] || state.lineJoin;
+          els.contourEnhanceSwitch.classList.toggle("on", !!state.contourEnhance);
+          els.contourEnhanceValue.textContent = state.contourEnhance ? "1" : "0";
+          els.contourOuterGlowValue.textContent = formatNumber(state.contourOuterGlow);
+          els.contourOuterGlowRange.value = state.contourOuterGlow;
+          els.contourOuterGlowInput.value = state.contourOuterGlow;
+          els.contourOuterWidthValue.textContent = formatNumber(state.contourOuterWidth);
+          els.contourOuterWidthRange.value = state.contourOuterWidth;
+          els.contourOuterWidthInput.value = state.contourOuterWidth;
+          els.contourMainWidthValue.textContent = formatNumber(state.contourMainWidth);
+          els.contourMainWidthRange.value = state.contourMainWidth;
+          els.contourMainWidthInput.value = state.contourMainWidth;
+          els.contourInnerWidthValue.textContent = formatNumber(state.contourInnerWidth);
+          els.contourInnerWidthRange.value = state.contourInnerWidth;
+          els.contourInnerWidthInput.value = state.contourInnerWidth;
+          els.contourCornerSoftnessValue.textContent = formatNumber(state.contourCornerSoftness);
+          els.contourCornerSoftnessRange.value = state.contourCornerSoftness;
+          els.contourCornerSoftnessInput.value = state.contourCornerSoftness;
           els.borderColor.value = state.borderColor;
           els.borderColorHex.value = state.borderColor;
           els.bgColor.value = state.bgColor;
@@ -1193,6 +1275,12 @@ html(lang="zh")
           params.set("lineJoin", state.lineJoin);
           params.set("borderColor", state.borderColor);
           params.set("bgColor", state.bgColor);
+          params.set("contourEnhance", state.contourEnhance ? "1" : "0");
+          params.set("contourOuterGlow", String(state.contourOuterGlow));
+          params.set("contourOuterWidth", String(state.contourOuterWidth));
+          params.set("contourMainWidth", String(state.contourMainWidth));
+          params.set("contourInnerWidth", String(state.contourInnerWidth));
+          params.set("contourCornerSoftness", String(state.contourCornerSoftness));
           params.set("enableShadow", state.enableShadow ? "1" : "0");
           params.set("shadowBlur", String(state.shadowBlur));
           params.set("shadowOffsetY", String(state.shadowOffsetY));
@@ -1225,6 +1313,12 @@ html(lang="zh")
               `  -F "lineJoin=${state.lineJoin}" \\`,
               `  -F "borderColor=${state.borderColor}" \\`,
               `  -F "bgColor=${state.bgColor}" \\`,
+              `  -F "contourEnhance=${state.contourEnhance ? 1 : 0}" \\`,
+              `  -F "contourOuterGlow=${state.contourOuterGlow}" \\`,
+              `  -F "contourOuterWidth=${state.contourOuterWidth}" \\`,
+              `  -F "contourMainWidth=${state.contourMainWidth}" \\`,
+              `  -F "contourInnerWidth=${state.contourInnerWidth}" \\`,
+              `  -F "contourCornerSoftness=${state.contourCornerSoftness}" \\`,
               `  -F "enableShadow=${state.enableShadow ? 1 : 0}" \\`,
               `  -F "shadowBlur=${state.shadowBlur}" \\`,
               `  -F "shadowOffsetY=${state.shadowOffsetY}" \\`,
@@ -1293,7 +1387,10 @@ html(lang="zh")
             }
             const info = await infoRes.json();
             els.previewSize.textContent = `${info.width} × ${info.height}`;
-            els.previewInfo.textContent = `形状=${shapeLabels[info.state.shape] || info.state.shape}，超采样=${info.state.antiAliasScale}x，缩小=${resizeStrategyLabels[info.state.resizeStrategy] || info.state.resizeStrategy}，渲染=${info.renderWidth} × ${info.renderHeight}`;
+            const contourLabel = info.state.contourEnhance
+              ? `增强(外晕 ${formatNumber(info.state.contourOuterGlow)} / 外扩 ${formatNumber(info.state.contourOuterWidth)} / 主描 ${formatNumber(info.state.contourMainWidth)} / 内柔 ${formatNumber(info.state.contourInnerWidth)} / 圆润 ${formatNumber(info.state.contourCornerSoftness)})`
+              : "关闭";
+            els.previewInfo.textContent = `形状=${shapeLabels[info.state.shape] || info.state.shape}，轮廓=${contourLabel}，超采样=${info.state.antiAliasScale}x，缩小=${resizeStrategyLabels[info.state.resizeStrategy] || info.state.resizeStrategy}，渲染=${info.renderWidth} × ${info.renderHeight}`;
           } catch (error) {
             els.previewSize.textContent = "0 × 0";
             els.previewInfo.textContent = `info 失败: ${error.message}`;
@@ -1381,6 +1478,11 @@ html(lang="zh")
         bindRange(els.imageScaleRange, els.imageScaleInput, "imageScale", (value) => clamp(Number.parseFloat(value || "1"), 0.01, 10));
         bindRange(els.imageOffsetYRange, els.imageOffsetYInput, "imageOffsetY", (value) => clamp(parseInt(value || "0", 10), -50, 50));
         bindRange(els.borderWidthRange, els.borderWidthInput, "borderWidth", (value) => clamp(parseInt(value || "0", 10), 0, 20));
+        bindRange(els.contourOuterGlowRange, els.contourOuterGlowInput, "contourOuterGlow", (value) => clamp(Number.parseFloat(value || "0"), 0, 20));
+        bindRange(els.contourOuterWidthRange, els.contourOuterWidthInput, "contourOuterWidth", (value) => clamp(Number.parseFloat(value || "0"), 0, 20));
+        bindRange(els.contourMainWidthRange, els.contourMainWidthInput, "contourMainWidth", (value) => clamp(Number.parseFloat(value || "0"), 0, 20));
+        bindRange(els.contourInnerWidthRange, els.contourInnerWidthInput, "contourInnerWidth", (value) => clamp(Number.parseFloat(value || "0"), 0, 20));
+        bindRange(els.contourCornerSoftnessRange, els.contourCornerSoftnessInput, "contourCornerSoftness", (value) => clamp(Number.parseFloat(value || "0"), 0, 1));
         bindRange(els.shadowBlurRange, els.shadowBlurInput, "shadowBlur", (value) => clamp(parseInt(value || "0", 10), 0, 50));
         bindRange(els.shadowOffsetYRange, els.shadowOffsetYInput, "shadowOffsetY", (value) => clamp(parseInt(value || "0", 10), -20, 20));
 
@@ -1400,6 +1502,7 @@ html(lang="zh")
         });
 
         els.enableShadowSwitch.addEventListener("click", () => setState({ enableShadow: !state.enableShadow }));
+        els.contourEnhanceSwitch.addEventListener("click", () => setState({ contourEnhance: !state.contourEnhance }));
         els.exportSquareSwitch.addEventListener("click", () => setState({ exportSquare: !state.exportSquare }));
 
         els.image.addEventListener("input", (event) => {
