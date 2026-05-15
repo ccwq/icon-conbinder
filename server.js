@@ -24,7 +24,7 @@
  * image          {string}  可选，图片输入：完整 URL / 相对路径 / data:image/*;base64,...
  *
  * POST /icon
- * Body: multipart/form-data，字段同上，image 为文本字段，不再接收二进制文件上传。
+ * Body: multipart/form-data，支持 `image` 文件上传；若未上传文件，也可回退到文本 `image` 字段。
  *
  * 默认值可由 `.env` 中对应的 `ICON_PARAM_*` 覆盖。
  */
@@ -44,7 +44,7 @@ const { URL } = require("url");
 const sharp = require("sharp");
 
 const app = express();
-const parseMultipartFields = multer().none();
+const upload = multer({ storage: multer.memoryStorage() });
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
 
@@ -798,6 +798,7 @@ app.get("/ui.html", (req, res) => {
         apiBaseUrl: `${req.protocol}://${req.get("host")}`,
         apiIconPath: "/icon",
         apiInfoPath: "/info",
+        imageEnableBase64: IMAGE_ENABLE_BASE64,
         state,
         shapeOptions: SHAPE_OPTIONS,
       }),
@@ -809,19 +810,23 @@ app.get("/ui.html", (req, res) => {
 
 /**
  * POST /icon — multipart/form-data
- * 字段与 GET 参数相同，image 为文本字段
+ * 支持 `image` 文件上传；若未上传文件，可使用文本 `image`
  */
-app.post("/icon", parseMultipartFields, async (req, res) => {
+app.post("/icon", upload.single("image"), async (req, res) => {
   try {
     const state = parseState({ ...req.query, ...req.body });
     let userImage = null;
 
-    const imageSource = resolveImageSource(state.image);
-    if (imageSource) {
-      if (imageSource.kind === "data") {
-        userImage = await loadImageFromBuffer(imageSource.buffer);
-      } else {
-        userImage = await loadImageFromUrl(imageSource.url);
+    if (req.file) {
+      userImage = await loadImageFromBuffer(req.file.buffer);
+    } else {
+      const imageSource = resolveImageSource(state.image);
+      if (imageSource) {
+        if (imageSource.kind === "data") {
+          userImage = await loadImageFromBuffer(imageSource.buffer);
+        } else {
+          userImage = await loadImageFromUrl(imageSource.url);
+        }
       }
     }
 
@@ -873,7 +878,7 @@ function startServer(port = PORT) {
     console.log(
       `  GET  /icon?shape=pin&iconSize=128&borderColor=%23ef4444&antiAliasScale=2`
     );
-    console.log(`  POST /icon  (multipart/form-data, image field)`);
+    console.log(`  POST /icon  (multipart/form-data, image file or text field)`);
     console.log(`  GET  /info?shape=pin&iconSize=128`);
   });
 }

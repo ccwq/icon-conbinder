@@ -142,7 +142,12 @@ test("POST /icon writes 50 composed PNG files under 50px", async () => {
           antiAliasScale: String(shapeCase.antiAliasScale),
           resizeStrategy: shapeCase.resizeStrategy,
         };
-        const multipart = buildMultipartForm(fields);
+        const multipart = buildMultipartForm(fields, {
+          name: "image",
+          filename: iconCase.file,
+          contentType: "image/png",
+          buffer: baseIcon,
+        });
 
         const res = await request(server, "POST", "/icon", {
           headers: {
@@ -225,6 +230,8 @@ test("GET /ui.html renders the pug template page", async () => {
     assert.match(html, /resizeStrategy/);
     assert.match(html, /image/);
     assert.doesNotMatch(html, /imageUrl/);
+    assert.match(html, /imageModeSelect/);
+    assert.match(html, /imageUpload/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

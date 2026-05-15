@@ -12,7 +12,7 @@ npm install
 - `express` — HTTP 框架
 - `@napi-rs/canvas` — 提供预编译二进制的 Node Canvas（无需 node-gyp 编译）
 - `sharp` — 服务端高质量缩放策略 `sharp-lanczos3`
-- `multer` — 处理 multipart/form-data 文本字段
+- `multer` — 处理 multipart/form-data 文件上传和字段
 
 ## 启动
 
@@ -43,6 +43,7 @@ node server.js
 - 复制区会输出当前状态对应的请求文本
 - 抗锯齿区可以选择离屏超采样倍率和缩小策略；预览固定 `1x`，导出和复制请求按当前选择生效
 - `image` 输入支持完整 URL、相对路径和 `data:image/*;base64,...`；相对路径可结合 `IMAGE_URL_PREFIX` 合成
+- 图片来源卡支持 `GET / POST` 切换，整个卡片可拖放文件；当 `GET` 且 `IMAGE_ENABLE_BASE64=0` 时，上传入口会禁用并提示原因
 - 当 `ENABLE_CORS=1` 时，页面和图像接口都可以跨域访问
 
 可直接打开：
@@ -98,11 +99,11 @@ GET /icon?shape=squircle&iconSize=200&image=/logo.png
 
 ### POST `/icon`
 
-使用 `multipart/form-data` 传递文本字段，字段与 GET 相同（通过表单字段或 query string 传递）。
+使用 `multipart/form-data` 上传本地图片，其他参数与 GET 相同（通过表单字段或 query string 传递）。
 
 | 字段    | 说明             |
 |-------|----------------|
-| `image` | 图片输入：完整 URL、相对路径或 `data:image/*;base64,...` |
+| `image` | 图片文件上传；若未上传文件，也可回退为文本输入（完整 URL、相对路径或 `data:image/*;base64,...`） |
 | 其他字段  | 与 GET 参数相同     |
 
 **curl 示例：**
@@ -114,7 +115,7 @@ curl -X POST http://localhost:3000/icon \
   -F "enableShadow=1" \
   -F "antiAliasScale=4" \
   -F "resizeStrategy=sharp-lanczos3" \
-  -F "image=https://example.com/logo.png" \
+  -F "image=@/path/to/your/icon.png" \
   -o output.png
 ```
 
