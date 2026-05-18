@@ -20,7 +20,7 @@ https://ccwq.github.io/icon-conbinder/
 
 ## 发布流程
 
-1. 把代码推送到 `main`
+1. 把代码推送到 `master`
 2. GitHub Actions 运行 `.github/workflows/deploy-pages.yml`
 3. 站点构建完成后自动部署到 GitHub Pages
 
