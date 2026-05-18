@@ -2,12 +2,15 @@
 
 用 Node.js 实现的 RESTful 接口，与 HTML 版本 **完全相同的 Canvas 渲染逻辑**，同等参数下两者输出的 PNG 像素一致。
 
+在线页面（GitHub Pages）：
+
+- `https://ccwq.github.io/icon-conbinder/`
+
 ## 文档站点
 
 - VitePress 静态站点：`docs/`
 - 本地预览：`npm run docs:dev`
 - 构建输出：`docs/.vitepress/dist`
-- GitHub Pages：`https://ccwq.github.io/icon-conbinder/`
 - npm 发布内容由 `package.json` 的 `files` 白名单控制
 
 ## 安装
