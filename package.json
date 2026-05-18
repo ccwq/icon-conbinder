@@ -1,11 +1,12 @@
 {
-  "name": "pin-icon-server",
-  "version": "1.0.0",
-  "description": "RESTful API for Pin Icon Generator, pixel-identical to the HTML version",
-  "main": "server.js",
-  "browser": "./browser.js",
+  "name": "icon-combinder",
+  "version": "1.0.2",
+  "description": "Library for composing wrapper icons, with a local test server and browser UMD entry",
+  "main": "./index.js",
   "license": "MIT",
   "files": [
+    "index.js",
+    "index.mjs",
     "server.js",
     "browser.js",
     "imgbed-server.js",
@@ -13,6 +14,16 @@
     "views/",
     "scripts/"
   ],
+  "exports": {
+    ".": {
+      "require": "./index.js",
+      "import": "./index.mjs"
+    },
+    "./browser.js": "./browser.js",
+    "./server.js": "./server.js",
+    "./imgbed-server.js": "./imgbed-server.js",
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node scripts/dev.js",
