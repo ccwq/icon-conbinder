@@ -3,29 +3,29 @@ layout: home
 title: Icon Combinder
 hero:
   name: Icon Combinder
-  text: 把 Wrapper 和 Icon 合成一个 PNG
-  tagline: 静态文档、API 参考和 GitHub Pages 发布入口
+  text: 可被其他项目引用的图标合成库
+  tagline: 同一套合成逻辑，同时支持 Node、浏览器 UMD 和本地测试服务
   actions:
     - theme: brand
       text: 快速开始
       link: /guide/getting-started
     - theme: alt
-      text: API 示例
+      text: 请求示例
       link: /examples/basic
 features:
-  - title: 文档可静态发布
-    details: 使用 VitePress 生成静态站点，直接部署到 GitHub Pages。
-  - title: 发布范围可控
-    details: npm 包通过 files 白名单控制，只包含运行时需要的文件。
-  - title: 示例贴近真实用法
-    details: 文档里的请求示例与当前服务端 / UI 参数保持一致。
+  - title: 库优先
+    details: 根包直接导出核心能力，方便其他项目按需引用。
+  - title: 浏览器可用
+    details: 提供 UMD 入口，适合静态页面或调试页直接挂载。
+  - title: 本地服务辅助调参
+    details: 通过 `/ui.html`、`/icon` 和 `/info` 快速验证组合效果。
 ---
 
 ## 你会在这里找到什么
 
-- 本地启动、文档预览和 GitHub Pages 部署方式
+- npm 安装、库引用和浏览器 UMD 入口
 - `/icon`、`/info`、`/ui.html` 和图床接口说明
-- GET / POST 请求示例
+- 本地测试服务和 GitHub Pages 文档站入口
 
 ## 快速入口
 

@@ -1,10 +1,113 @@
-# Pin Icon Generator — REST API
+# Icon Combinder
 
-用 Node.js 实现的 RESTful 接口，与 HTML 版本 **完全相同的 Canvas 渲染逻辑**，同等参数下两者输出的 PNG 像素一致。
+`icon-combinder` 是一个可被其他项目引用的图标合成库，外加一个本地测试服务。  
+它的最初目的不是长期托管一个在线站点，而是让你快速试参数、确认 `Wrapper + Icon` 的组合效果，并复用同一套合成逻辑。
 
-在线页面（GitHub Pages）：
+在线文档站：
 
 - `https://ccwq.github.io/icon-conbinder/`
+
+发布与反馈：
+
+- npm 包：`https://www.npmjs.com/package/icon-combinder`
+- GitHub Issues：`https://github.com/ccwq/icon-conbinder/issues`
+
+## 安装
+
+只安装库本身：
+
+```bash
+npm install icon-combinder
+```
+
+如果你是在本仓库里做本地开发，再运行：
+
+```bash
+npm install
+```
+
+依赖：
+
+- `express` - HTTP 框架
+- `@napi-rs/canvas` - Node Canvas 实现，免 `node-gyp`
+- `sharp` - 服务端高质量缩小策略 `sharp-lanczos3`
+- `multer` - 处理 `multipart/form-data`
+
+## 库入口
+
+根包直接导出稳定能力，适合在其他项目里引用：
+
+```js
+const {
+  parseState,
+  getLayout,
+  getRenderSize,
+  resolveImageReference,
+  renderComposite,
+  createNodeRuntime,
+  loadImageFromReference,
+} = require("icon-combinder");
+```
+
+这些导出对应三层能力：
+
+- `core` - 参数解析、布局和尺寸计算
+- `render` - 合成渲染
+- `runtime` - Node 侧图片加载与编码适配
+
+如果你用的是 ESM / 打包器，也可以按同名命名导入读取这些能力。
+
+## 浏览器 UMD
+
+浏览器端保留 UMD 入口，适合直接在页面里做快速试验或接入现有调试页。  
+加载顺序要保持为 `core` -> `render` -> `browser.js`：
+
+```html
+<script src="/assets/core/index.js"></script>
+<script src="/assets/core/render.js"></script>
+<script src="/browser.js"></script>
+```
+
+然后使用：
+
+```js
+await window.IconCombinderBrowser.renderIcon(state, source);
+```
+
+`browser.js` 本身是 UMD 包装，不会在浏览器加载阶段直接报错；真正渲染时才会检查 `IconCombinderCore` 和 `IconCombinderRender` 是否已加载。
+
+## 本地测试服务
+
+服务端入口仍然保留，作为调参和联调辅助：
+
+```bash
+npm start
+```
+
+开发模式会同时启动主服务和独立的测试图床：
+
+```bash
+npm run dev
+```
+
+通过 `.env` 控制端口、CORS、请求参数默认值和 `image` 解析规则；`.env.example` 保持同样结构，直接复制后修改即可。
+
+常用环境变量：
+
+- `PORT` - 服务监听端口，默认 `3000`
+- `ENABLE_CORS` - 是否开启全局 CORS，默认 `0`
+- `ICON_PARAM_*` - 请求参数默认值、候选值和范围都写在 `.env` / `.env.example` 里
+- `IMAGE_URL_PREFIX` - `image` 取相对路径时的基础前缀
+- `IMAGE_URL_PREFIX_ONLY` - 是否要求最终解析后的 URL 必须命中 `IMAGE_URL_PREFIX`
+- `IMAGE_ENABLE_BASE64` - 是否允许 `image` 传入 `data:image/*;base64,...`
+- `IMG_BED_BASE_URL` - `ui.html` 里 GET 模式文件上传要用的独立图床地址，`npm run dev` 默认注入 `http://127.0.0.1:3001`
+- `ENABLE_CORS=1` 时，`/ui.html`、`/icon`、`/info` 都会带上 CORS 响应头
+
+## 使用场景
+
+- 在 Node 服务、脚本或 CI 里生成合成图标
+- 在浏览器里打开 `ui.html`，快速试 `shape`、描边、阴影、抗锯齿和图片输入
+- 在其他项目里复用 `parseState` / `getLayout` / `renderComposite`，把这套合成逻辑当作库接入
 
 ## 文档站点
 
@@ -13,44 +116,11 @@
 - 构建输出：`docs/.vitepress/dist`
 - npm 发布内容由 `package.json` 的 `files` 白名单控制
 
-## 安装
-
-```bash
-npm install
-```
-
-依赖：
-- `express` — HTTP 框架
-- `@napi-rs/canvas` — 提供预编译二进制的 Node Canvas（无需 node-gyp 编译）
-- `sharp` — 服务端高质量缩放策略 `sharp-lanczos3`
-- `multer` — 处理 multipart/form-data 文件上传和字段
-
-## 启动
-
-```bash
-node server.js
-```
-
-通过 `.env` 控制端口、CORS、请求参数默认值和 `image` 解析规则；`.env.example` 保持同样结构，直接复制后修改即可。
-
-开发模式会同时启动主服务和独立的测试图床：
-
-```bash
-npm run dev
-```
-
-- `PORT`：服务监听端口，默认 `3000`
-- `ENABLE_CORS`：是否开启全局 CORS，默认 `0`
-- `ICON_PARAM_*`：请求参数默认值、候选值和范围都写在 `.env` / `.env.example` 里，运行时优先读取这些值
-- `IMAGE_URL_PREFIX`：`image` 取相对路径时的基础前缀，服务端会用 `new URL(image, IMAGE_URL_PREFIX)` 合成最终地址
-- `IMAGE_URL_PREFIX_ONLY`：是否要求最终解析后的 URL 必须命中 `IMAGE_URL_PREFIX`
-- `IMAGE_ENABLE_BASE64`：是否允许 `image` 传入 `data:image/*;base64,...`
-- `IMG_BED_BASE_URL`：`ui.html` 里 GET 模式文件上传要用的独立图床地址，`npm run dev` 默认注入 `http://127.0.0.1:3001`
-- `ENABLE_CORS=1` 时，`/ui.html`、`/icon`、`/info` 都会带上 CORS 响应头
-
 ---
 
-## API
+## HTTP API
+
+下面这部分描述的是本地测试服务对外暴露的 HTTP 接口，不是库入口本身。
 
 ### GET `/ui.html`
 

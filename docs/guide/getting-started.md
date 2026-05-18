@@ -3,10 +3,22 @@
 ## 安装
 
 ```bash
-npm install
+npm install icon-combinder
 ```
 
-## 启动服务
+## 作为库引用
+
+```js
+const {
+  renderComposite,
+  createNodeRuntime,
+  loadImageFromReference,
+} = require("icon-combinder");
+```
+
+如果你用的是打包器，也可以按同名命名导入读取这些能力。
+
+## 启动本地测试服务
 
 ```bash
 npm start
@@ -17,6 +29,8 @@ npm start
 ```bash
 http://localhost:3000/ui.html
 ```
+
+这个服务的主要作用是快速试参数，而不是长期对外托管。
 
 ## 文档站点
 
