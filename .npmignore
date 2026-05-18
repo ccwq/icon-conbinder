@@ -1,0 +1,14 @@
+docs/
+docs/.vitepress/
+__test__/
+.github/
+pin-icon-generator.html
+skills-lock.json
+CONTEXT.md
+AGENTS.md
+.env
+.env.*
+!.env.example
+*.tgz
+coverage/
+dist/

@@ -219,7 +219,11 @@ test("GET /ui.html renders the pug template page", async () => {
     assert.match(html, /图钉/);
     assert.match(html, /圆角/);
     assert.match(html, /平滑高质量/);
-    assert.match(html, /window\.__ICON_PAGE__/);
+    assert.match(html, /id="iconPageData"/);
+    assert.match(html, /\/browser\.js/);
+    assert.match(html, /\/assets\/core\/index\.js/);
+    assert.match(html, /\/assets\/core\/render\.js/);
+    assert.match(html, /\/assets\/ui\.js/);
     assert.match(html, /\/icon/);
     assert.match(html, /\/info/);
     assert.match(html, /"shape":"circle"/);
@@ -229,7 +233,9 @@ test("GET /ui.html renders the pug template page", async () => {
     assert.match(html, /antiAliasScale/);
     assert.match(html, /resizeStrategy/);
     assert.match(html, /image/);
-    assert.doesNotMatch(html, /imageUrl/);
+    assert.match(html, /imageUrlPrefix/);
+    assert.match(html, /imageEnableBase64/);
+    assert.match(html, /renderModeSelect/);
     assert.match(html, /imageModeSelect/);
     assert.match(html, /imageUpload/);
   } finally {
