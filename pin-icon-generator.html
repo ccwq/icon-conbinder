@@ -1265,6 +1265,9 @@
                 const shapeWidth = bboxWidth * scale;
                 const shapeHeight = bboxHeight * scale;
                 const strokePad = Math.max(0, state.borderWidth);
+                const contourPad = state.contourEnhance
+                    ? Math.ceil(state.contourOuterWidth * 0.35 + state.contourOuterGlow * 0.75)
+                    : 0;
                 const shadowSpread = state.enableShadow
                     ? Math.max(0, Math.ceil(state.shadowBlur * 1.5))
                     : 0;
@@ -1276,10 +1279,10 @@
                 const shadowExtraRight = shadowSpread + Math.max(0, shadowOffsetX);
                 const shadowExtraTop = shadowSpread + Math.max(0, -shadowOffsetY);
                 const shadowExtraBottom = shadowSpread + Math.max(0, shadowOffsetY);
-                const leftPad = Math.ceil(strokePad + shadowExtraLeft);
-                const rightPad = Math.ceil(strokePad + shadowExtraRight);
-                const topPad = Math.ceil(strokePad + shadowExtraTop);
-                const bottomPad = Math.ceil(strokePad + shadowExtraBottom);
+                const leftPad = Math.ceil(strokePad + shadowExtraLeft + contourPad);
+                const rightPad = Math.ceil(strokePad + shadowExtraRight + contourPad);
+                const topPad = Math.ceil(strokePad + shadowExtraTop + contourPad);
+                const bottomPad = Math.ceil(strokePad + shadowExtraBottom + contourPad);
 
                 const rectWidth = Math.ceil(shapeWidth + leftPad + rightPad);
                 const rectHeight = Math.ceil(shapeHeight + topPad + bottomPad);

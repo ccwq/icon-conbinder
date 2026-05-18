@@ -131,6 +131,16 @@ html(lang="zh")
         color: var(--muted);
       }
 
+      .danger-btn {
+        border: 1px solid color-mix(in srgb, var(--danger) 55%, var(--border));
+        background: color-mix(in srgb, var(--danger) 14%, var(--card));
+        color: #ffcfbf;
+      }
+
+      .danger-btn:hover {
+        border-color: var(--danger);
+      }
+
       .primary-btn {
         border: 1px solid transparent;
         color: #fff;
@@ -142,8 +152,9 @@ html(lang="zh")
         flex: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(400px, 520px) minmax(0, 1fr);
+        grid-template-columns: minmax(980px, 1fr) minmax(0, 560px);
         gap: 8px;
+        align-items: start;
       }
 
       .panel,
@@ -167,9 +178,10 @@ html(lang="zh")
         overflow: auto;
         padding: 10px;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 8px;
         align-content: start;
+        grid-auto-flow: row dense;
       }
 
       .section {
@@ -184,6 +196,9 @@ html(lang="zh")
       }
 
       .section.full { grid-column: 1 / -1; }
+      .section.span-2 { grid-column: span 2; }
+      .section.span-3 { grid-column: span 3; }
+      .section.span-4 { grid-column: span 4; }
 
       .section-title {
         display: flex;
@@ -232,7 +247,7 @@ html(lang="zh")
 
       .shape-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 6px;
       }
 
@@ -354,6 +369,18 @@ html(lang="zh")
         grid-template-columns: 1fr 72px;
         gap: 10px;
         align-items: center;
+      }
+
+      /* 数字输入 + 单位选择器，用于 marginX/marginY */
+      .margin-input-row {
+        display: grid;
+        grid-template-columns: 1fr 52px;
+        gap: 8px;
+        align-items: center;
+      }
+      .margin-input-row select {
+        padding: 4px 6px;
+        font-size: 0.82em;
       }
 
       input[type="range"] {
@@ -553,6 +580,10 @@ html(lang="zh")
       .preview {
         display: flex;
         flex-direction: column;
+        align-self: start;
+        justify-self: start;
+        width: 100%;
+        max-width: 560px;
       }
 
       .preview-head {
@@ -576,23 +607,38 @@ html(lang="zh")
       }
 
       .preview-body {
-        flex: 1;
         min-height: 0;
         padding: 10px;
         display: flex;
         flex-direction: column;
         gap: 8px;
+        align-items: flex-start;
+        width: 100%;
+        max-width: 100%;
       }
 
-      .preview-stage {
-        flex: 1;
-        min-height: 340px;
-        border-radius: 20px;
+      .preview-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: flex-start;
+        justify-content: flex-start;
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .preview-card {
+        flex: 0 0 auto;
+        min-width: 132px;
+        max-width: 100%;
+      }
+
+      .preview-surface {
+        min-height: 0;
+        border-radius: 16px;
         border: 1px solid var(--border);
-        background:
-          radial-gradient(circle at 20% 20%, rgba(107, 167, 255, 0.06), transparent 28%),
-          radial-gradient(circle at 80% 80%, rgba(120, 224, 193, 0.06), transparent 26%),
-          #0f1422;
+        padding: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -600,24 +646,57 @@ html(lang="zh")
         position: relative;
       }
 
-      .preview-stage::before {
+      .preview-surface::before {
         content: "";
         position: absolute;
         inset: 0;
-        background:
-          linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%) 0 0 / 22px 22px,
-          linear-gradient(-45deg, rgba(255,255,255,0.03) 25%, transparent 25%) 0 11px / 22px 22px;
-        opacity: 0.14;
         pointer-events: none;
       }
 
-      #previewImage {
+      .preview-surface--dark {
+        background:
+          radial-gradient(circle at 20% 20%, rgba(107, 167, 255, 0.06), transparent 28%),
+          radial-gradient(circle at 80% 80%, rgba(120, 224, 193, 0.06), transparent 26%),
+          #0f1422;
+      }
+
+      .preview-surface--light {
+        background:
+          radial-gradient(circle at 20% 20%, rgba(107, 167, 255, 0.05), transparent 28%),
+          radial-gradient(circle at 80% 80%, rgba(120, 224, 193, 0.05), transparent 26%),
+          #ffffff;
+        border-color: #d7dfeb;
+      }
+
+      .preview-surface--checker {
+        background-color: #ffffff;
+        background-image:
+          linear-gradient(45deg, #d6dce7 25%, transparent 25%),
+          linear-gradient(-45deg, #d6dce7 25%, transparent 25%),
+          linear-gradient(45deg, transparent 75%, #d6dce7 75%),
+          linear-gradient(-45deg, transparent 75%, #d6dce7 75%);
+        background-size: 18px 18px;
+        background-position:
+          0 0,
+          0 9px,
+          9px -9px,
+          -9px 0;
+        border-color: #d7dfeb;
+      }
+
+      .preview-image {
         position: relative;
         z-index: 1;
-        max-width: 92%;
-        max-height: 92%;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
         display: block;
         user-select: none;
+      }
+
+      .preview-cards .sr-only {
+        pointer-events: none;
       }
 
       .preview-status {
@@ -627,10 +706,34 @@ html(lang="zh")
         gap: 12px;
         color: var(--muted);
         font-size: 12px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
       }
 
       .preview-status strong {
         color: var(--text);
+      }
+
+      .preview-status .left {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex: 0 1 auto;
+      }
+
+      .preview-status .right {
+        min-width: 0;
+        flex: 1 1 auto;
+        text-align: right;
+      }
+
+      #previewInfo {
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
 
       .inline-note {
@@ -657,6 +760,30 @@ html(lang="zh")
         }
       }
 
+      @media (max-width: 1700px) {
+        .panel-scroll {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .section.span-4,
+        .section.full {
+          grid-column: 1 / -1;
+        }
+        .section.span-3 {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 1320px) {
+        .panel-scroll {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .section.span-3,
+        .section.span-4,
+        .section.full {
+          grid-column: 1 / -1;
+        }
+      }
+
       @media (max-width: 760px) {
         .app-shell { padding: 10px; }
         .topbar {
@@ -669,6 +796,11 @@ html(lang="zh")
         .panel-scroll {
           grid-template-columns: 1fr;
         }
+        .section.span-2,
+        .section.span-3,
+        .section.span-4 {
+          grid-column: auto;
+        }
         .section.full { grid-column: auto; }
         .grid-2,
         .color-row {
@@ -677,8 +809,18 @@ html(lang="zh")
         .shape-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
-        .preview-stage {
-          min-height: 280px;
+        .preview {
+          width: 100%;
+        }
+        .preview-cards {
+          flex-direction: column;
+        }
+        .preview-card {
+          width: 100%;
+          max-width: none;
+        }
+        .preview-surface {
+          width: 100%;
         }
       }
       body
@@ -690,6 +832,7 @@ html(lang="zh")
         .toolbar
           button#copyRequestBtn.chip-btn(type="button") 复制请求
           button#copyQueryBtn.ghost-btn(type="button") 复制查询串
+          button#resetStorageBtn.danger-btn(type="button") 重置缓存
           a.primary-btn(href="/icon?shape=pin&iconSize=128", target="_blank", rel="noreferrer") 打开示例图
 
       main.layout
@@ -799,7 +942,7 @@ html(lang="zh")
                   option(value="miter", selected=state.lineJoin === "miter") 斜接
                   option(value="bevel", selected=state.lineJoin === "bevel") 斜角
 
-            section.section.full
+            section.section.span-2
               .section-title
                 strong 轮廓增强
                 span 多层描边与柔化
@@ -902,7 +1045,38 @@ html(lang="zh")
                   option(value="center", selected=state.exportStrategy === "center") 居中
                   option(value="bottom", selected=state.exportStrategy === "bottom") 贴底
 
-            section.section.full
+              // 正方形模式：单一边距输入（marginX = marginY 联动）
+              .field#marginSquareRow(style=state.exportSquare ? "" : "display:none")
+                .field-label
+                  span 边距修正
+                  span.value#marginSquareValue= (state.marginX || 0) + "px"
+                .margin-input-row
+                  input#marginSquareInput(type="number", min="0", max="500", step="1", value=state.marginX || 0)
+                  select#marginSquareUnitSelect
+                    option(value="px") px
+                    option(value="%") %
+
+              // 非正方形模式：X 和 Y 分开控制
+              .field#marginXRow(style=state.exportSquare ? "display:none" : "")
+                .field-label
+                  span 水平边距 X
+                  span.value#marginXValue= (state.marginX || 0) + "px"
+                .margin-input-row
+                  input#marginXInput(type="number", min="0", max="500", step="1", value=state.marginX || 0)
+                  select#marginXUnitSelect
+                    option(value="px") px
+                    option(value="%") %
+              .field#marginYRow(style=state.exportSquare ? "display:none" : "")
+                .field-label
+                  span 垂直边距 Y
+                  span.value#marginYValue= (state.marginY || 0) + "px"
+                .margin-input-row
+                  input#marginYInput(type="number", min="0", max="500", step="1", value=state.marginY || 0)
+                  select#marginYUnitSelect
+                    option(value="px") px
+                    option(value="%") %
+
+            section.section.span-2
               .section-title
                 strong 抗锯齿
                 span 超采样与缩小策略
@@ -927,7 +1101,7 @@ html(lang="zh")
               .inline-note
                 | `antiAliasScale` 控制超采样倍率，`resizeStrategy` 控制缩小方式。预览保持 `1x`，导出和复制请求按当前选择生效。
 
-            section.section.full
+            section.section.span-4
               .section-title
                 strong 请求文本
                 span 当前配置生成的请求
@@ -944,15 +1118,26 @@ html(lang="zh")
             h2 预览
             .preview-meta
               span#previewSize 0 × 0
-              |  · 
+              |  ·
               span#previewMode GET
           .preview-body
-            .preview-stage
-              img#previewImage(alt="服务端预览")
+            .preview-cards
+              .preview-card
+                .preview-surface.preview-surface--dark(aria-label="黑底预览")
+                  span.sr-only 黑底预览
+                  img#previewImageDark.preview-image(alt="服务端预览")
+              .preview-card
+                .preview-surface.preview-surface--light(aria-label="白底预览")
+                  span.sr-only 白底预览
+                  img#previewImageLight.preview-image(alt="服务端预览")
+              .preview-card
+                .preview-surface.preview-surface--checker(aria-label="棋盘预览")
+                  span.sr-only 棋盘预览
+                  img#previewImageChecker.preview-image(alt="服务端预览")
             .preview-status
               .left
                 strong#previewStatus 加载中
-                |  · 
+                |  ·
                 span#previewTip 等待你调整参数
               .right
                 span#previewInfo -
@@ -991,6 +1176,124 @@ html(lang="zh")
           file: null,
           fileName: "",
           filePreviewUrl: "",
+          // margin 在 UI 侧以原始数字 + 单位分开存储
+          marginX: Number(initialState.marginX) || 0,
+          marginXUnit: "px",
+          marginY: Number(initialState.marginY) || 0,
+          marginYUnit: "px",
+        };
+
+        const STORAGE_KEY = "pin-icon-ui-state-v1";
+        const FILE_DB_NAME = "pin-icon-ui-file-v1";
+        const FILE_STORE_NAME = "files";
+        const FILE_STORE_KEY = "selected-file";
+        let storageDbPromise = null;
+        let persistTimer = 0;
+
+        const serializeState = () => {
+          const snapshot = {};
+          for (const [key, value] of Object.entries(state)) {
+            if (key === "file" || key === "filePreviewUrl" || key === "fileName") {
+              continue;
+            }
+            snapshot[key] = value;
+          }
+          return snapshot;
+        };
+
+        const applyPersistedState = (snapshot) => {
+          if (!snapshot || typeof snapshot !== "object") return;
+          for (const [key, value] of Object.entries(snapshot)) {
+            if (key === "file" || key === "filePreviewUrl" || key === "fileName") {
+              continue;
+            }
+            if (key in state) {
+              state[key] = value;
+            }
+          }
+        };
+
+        const saveStateSnapshot = () => {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState()));
+          } catch {
+            // localStorage 可能被禁用或配额已满，降级为仅保留内存态。
+          }
+        };
+
+        const scheduleStateSnapshot = () => {
+          window.clearTimeout(persistTimer);
+          persistTimer = window.setTimeout(saveStateSnapshot, 120);
+        };
+
+        const openFileStore = () => {
+          if (storageDbPromise) return storageDbPromise;
+          storageDbPromise = new Promise((resolve, reject) => {
+            const request = indexedDB.open(FILE_DB_NAME, 1);
+            request.onupgradeneeded = () => {
+              const db = request.result;
+              if (!db.objectStoreNames.contains(FILE_STORE_NAME)) {
+                db.createObjectStore(FILE_STORE_NAME);
+              }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => {
+              storageDbPromise = null;
+              reject(request.error || new Error("indexedDB open failed"));
+            };
+          });
+          return storageDbPromise;
+        };
+
+        const saveSelectedFile = async (file) => {
+          if (!file || typeof indexedDB === "undefined") return;
+          try {
+            const db = await openFileStore();
+            await new Promise((resolve, reject) => {
+              const tx = db.transaction(FILE_STORE_NAME, "readwrite");
+              const store = tx.objectStore(FILE_STORE_NAME);
+              store.put(file, FILE_STORE_KEY);
+              tx.oncomplete = () => resolve();
+              tx.onerror = () => reject(tx.error || new Error("indexedDB write failed"));
+              tx.onabort = () => reject(tx.error || new Error("indexedDB write aborted"));
+            });
+          } catch {
+            storageDbPromise = null;
+          }
+        };
+
+        const loadSelectedFile = async () => {
+          if (typeof indexedDB === "undefined") return null;
+          try {
+            const db = await openFileStore();
+            return await new Promise((resolve, reject) => {
+              const tx = db.transaction(FILE_STORE_NAME, "readonly");
+              const store = tx.objectStore(FILE_STORE_NAME);
+              const request = store.get(FILE_STORE_KEY);
+              request.onsuccess = () => resolve(request.result || null);
+              request.onerror = () => reject(request.error || new Error("indexedDB read failed"));
+            });
+          } catch {
+            storageDbPromise = null;
+            return null;
+          }
+        };
+
+        const clearSelectedFile = async () => {
+          if (typeof indexedDB === "undefined") return;
+          try {
+            const db = await openFileStore();
+            await new Promise((resolve, reject) => {
+              const tx = db.transaction(FILE_STORE_NAME, "readwrite");
+              tx.objectStore(FILE_STORE_NAME).delete(FILE_STORE_KEY);
+              tx.oncomplete = () => resolve();
+              tx.onerror = () => reject(tx.error || new Error("indexedDB delete failed"));
+              tx.onabort = () => reject(tx.error || new Error("indexedDB delete aborted"));
+            });
+          } catch {
+            storageDbPromise = null;
+            // reset 过程中允许清理失败，用户还可以继续手动覆盖。
+          }
         };
 
         const els = {
@@ -1059,9 +1362,25 @@ html(lang="zh")
           exportSquareValue: document.getElementById("exportSquareValue"),
           exportStrategySelect: document.getElementById("exportStrategySelect"),
           exportStrategyValue: document.getElementById("exportStrategyValue"),
+          marginSquareRow: document.getElementById("marginSquareRow"),
+          marginSquareInput: document.getElementById("marginSquareInput"),
+          marginSquareUnitSelect: document.getElementById("marginSquareUnitSelect"),
+          marginSquareValue: document.getElementById("marginSquareValue"),
+          marginXRow: document.getElementById("marginXRow"),
+          marginXInput: document.getElementById("marginXInput"),
+          marginXUnitSelect: document.getElementById("marginXUnitSelect"),
+          marginXValue: document.getElementById("marginXValue"),
+          marginYRow: document.getElementById("marginYRow"),
+          marginYInput: document.getElementById("marginYInput"),
+          marginYUnitSelect: document.getElementById("marginYUnitSelect"),
+          marginYValue: document.getElementById("marginYValue"),
           requestText: document.getElementById("requestText"),
           requestHint: document.getElementById("requestHint"),
-          previewImage: document.getElementById("previewImage"),
+          previewImages: [
+            document.getElementById("previewImageDark"),
+            document.getElementById("previewImageLight"),
+            document.getElementById("previewImageChecker"),
+          ],
           previewStatus: document.getElementById("previewStatus"),
           previewTip: document.getElementById("previewTip"),
           previewInfo: document.getElementById("previewInfo"),
@@ -1071,6 +1390,7 @@ html(lang="zh")
           copyRequestBtn2: document.getElementById("copyRequestBtn2"),
           copyQueryBtn: document.getElementById("copyQueryBtn"),
           copyQueryBtn2: document.getElementById("copyQueryBtn2"),
+          resetStorageBtn: document.getElementById("resetStorageBtn"),
         };
 
         let previewObjectUrl = "";
@@ -1116,9 +1436,22 @@ html(lang="zh")
         const setMode = (mode) => {
           if (mode === state.imageMode) return;
           state.imageMode = mode;
-          state.image = "";
-          clearUploadState();
           refreshAll();
+          if (mode === "get" && state.file && apiImageBedUploadUrl) {
+            void restorePreviewImageFromFile();
+          }
+        };
+
+        const restorePreviewImageFromFile = async () => {
+          if (!state.file || state.imageMode !== "get" || !apiImageBedUploadUrl) {
+            return;
+          }
+          try {
+            state.image = await uploadFileToBed(state.file);
+            refreshAll();
+          } catch {
+            // 如果图床暂时不可用，保留已有状态即可。
+          }
         };
 
         const uploadFileToBed = async (file) => {
@@ -1143,12 +1476,13 @@ html(lang="zh")
           revokeFilePreview();
           state.fileName = file.name;
           state.filePreviewUrl = URL.createObjectURL(file);
+          await saveSelectedFile(file);
 
           if (state.imageMode === "post") {
             state.file = file;
             state.image = "";
           } else {
-            state.file = null;
+            state.file = file;
             state.image = await uploadFileToBed(file);
           }
 
@@ -1247,6 +1581,28 @@ html(lang="zh")
           els.exportSquareValue.textContent = state.exportSquare ? "1" : "0";
           els.exportStrategySelect.value = state.exportStrategy;
           els.exportStrategyValue.textContent = exportStrategyLabels[state.exportStrategy] || state.exportStrategy;
+
+          // 边距修正控件同步
+          const fmtMargin = (v, u) => u === "%" ? `${formatNumber(v)}%` : `${formatNumber(v)}px`;
+          if (state.exportSquare) {
+            els.marginSquareRow.style.display = "";
+            els.marginXRow.style.display = "none";
+            els.marginYRow.style.display = "none";
+            els.marginSquareInput.value = state.marginX;
+            els.marginSquareUnitSelect.value = state.marginXUnit;
+            els.marginSquareValue.textContent = fmtMargin(state.marginX, state.marginXUnit);
+          } else {
+            els.marginSquareRow.style.display = "none";
+            els.marginXRow.style.display = "";
+            els.marginYRow.style.display = "";
+            els.marginXInput.value = state.marginX;
+            els.marginXUnitSelect.value = state.marginXUnit;
+            els.marginXValue.textContent = fmtMargin(state.marginX, state.marginXUnit);
+            els.marginYInput.value = state.marginY;
+            els.marginYUnitSelect.value = state.marginYUnit;
+            els.marginYValue.textContent = fmtMargin(state.marginY, state.marginYUnit);
+          }
+
           document.querySelectorAll("#iconSizePresetRow .preset-chip").forEach((button) => {
             const active = Number(button.dataset.size) === state.iconSize;
             button.classList.toggle("active", active);
@@ -1286,6 +1642,9 @@ html(lang="zh")
           params.set("shadowOffsetY", String(state.shadowOffsetY));
           params.set("exportSquare", state.exportSquare ? "1" : "0");
           params.set("exportStrategy", state.exportStrategy);
+          // 只有非 0 时才附加 margin 参数，减少 URL 长度
+          if (state.marginX > 0) params.set("marginX", `${state.marginX}${state.marginXUnit}`);
+          if (state.marginY > 0) params.set("marginY", `${state.marginY}${state.marginYUnit}`);
           params.set("antiAliasScale", String(state.antiAliasScale));
           params.set("resizeStrategy", state.resizeStrategy);
           if (state.imageMode === "get" && state.image) {
@@ -1324,6 +1683,8 @@ html(lang="zh")
               `  -F "shadowOffsetY=${state.shadowOffsetY}" \\`,
               `  -F "exportSquare=${state.exportSquare ? 1 : 0}" \\`,
               `  -F "exportStrategy=${state.exportStrategy}" \\`,
+              ...(state.marginX > 0 ? [`  -F "marginX=${state.marginX}${state.marginXUnit}" \\`] : []),
+              ...(state.marginY > 0 ? [`  -F "marginY=${state.marginY}${state.marginYUnit}" \\`] : []),
               `  -F "antiAliasScale=${state.antiAliasScale}" \\`,
               `  -F "resizeStrategy=${state.resizeStrategy}" \\`,
             ];
@@ -1391,10 +1752,20 @@ html(lang="zh")
               ? `增强(外晕 ${formatNumber(info.state.contourOuterGlow)} / 外扩 ${formatNumber(info.state.contourOuterWidth)} / 主描 ${formatNumber(info.state.contourMainWidth)} / 内柔 ${formatNumber(info.state.contourInnerWidth)} / 圆润 ${formatNumber(info.state.contourCornerSoftness)})`
               : "关闭";
             els.previewInfo.textContent = `形状=${shapeLabels[info.state.shape] || info.state.shape}，轮廓=${contourLabel}，超采样=${info.state.antiAliasScale}x，缩小=${resizeStrategyLabels[info.state.resizeStrategy] || info.state.resizeStrategy}，渲染=${info.renderWidth} × ${info.renderHeight}`;
+            els.previewInfo.title = els.previewInfo.textContent;
           } catch (error) {
             els.previewSize.textContent = "0 × 0";
             els.previewInfo.textContent = `info 失败: ${error.message}`;
+            els.previewInfo.title = els.previewInfo.textContent;
           }
+        };
+
+        const setPreviewImages = (src) => {
+          els.previewImages.forEach((img) => {
+            if (img) {
+              img.src = src;
+            }
+          });
         };
 
         const updatePreviewImage = async () => {
@@ -1430,9 +1801,9 @@ html(lang="zh")
                 URL.revokeObjectURL(previewObjectUrl);
               }
               previewObjectUrl = URL.createObjectURL(blob);
-              els.previewImage.src = previewObjectUrl;
+              setPreviewImages(previewObjectUrl);
             } else {
-              els.previewImage.src = buildPreviewRequest();
+              setPreviewImages(buildPreviewRequest());
             }
             if (token !== previewToken) return;
             els.previewStatus.textContent = "已更新";
@@ -1444,9 +1815,12 @@ html(lang="zh")
           }
         };
 
-        const refreshAll = () => {
+        const refreshAll = (shouldPersist = true) => {
           syncControlValues();
           updateRequestBox();
+          if (shouldPersist) {
+            scheduleStateSnapshot();
+          }
           window.clearTimeout(previewTimer);
           previewTimer = window.setTimeout(() => {
             updatePreviewInfo();
@@ -1503,7 +1877,30 @@ html(lang="zh")
 
         els.enableShadowSwitch.addEventListener("click", () => setState({ enableShadow: !state.enableShadow }));
         els.contourEnhanceSwitch.addEventListener("click", () => setState({ contourEnhance: !state.contourEnhance }));
-        els.exportSquareSwitch.addEventListener("click", () => setState({ exportSquare: !state.exportSquare }));
+        els.exportSquareSwitch.addEventListener("click", () => {
+          const next = !state.exportSquare;
+          // 切换到正方形模式时，将 marginY 同步为 marginX
+          if (next) setState({ exportSquare: true, marginY: state.marginX, marginYUnit: state.marginXUnit });
+          else setState({ exportSquare: false });
+        });
+
+        // 正方形模式：单一输入同时驱动 marginX 和 marginY
+        const handleMarginSquare = (rawValue, unit) => {
+          const v = Math.max(0, Number.parseFloat(rawValue) || 0);
+          setState({ marginX: v, marginXUnit: unit, marginY: v, marginYUnit: unit });
+        };
+        els.marginSquareInput.addEventListener("input", (e) => handleMarginSquare(e.target.value, state.marginXUnit));
+        els.marginSquareUnitSelect.addEventListener("change", (e) => handleMarginSquare(state.marginX, e.target.value));
+
+        // 非正方形模式：X 和 Y 分开
+        els.marginXInput.addEventListener("input", (e) => {
+          setState({ marginX: Math.max(0, Number.parseFloat(e.target.value) || 0) });
+        });
+        els.marginXUnitSelect.addEventListener("change", (e) => setState({ marginXUnit: e.target.value }));
+        els.marginYInput.addEventListener("input", (e) => {
+          setState({ marginY: Math.max(0, Number.parseFloat(e.target.value) || 0) });
+        });
+        els.marginYUnitSelect.addEventListener("change", (e) => setState({ marginYUnit: e.target.value }));
 
         els.image.addEventListener("input", (event) => {
           if (state.imageMode === "post") return;
@@ -1566,7 +1963,60 @@ html(lang="zh")
         els.copyRequestBtn2.addEventListener("click", copyCurrentRequest);
         els.copyQueryBtn.addEventListener("click", copyCurrentQuery);
         els.copyQueryBtn2.addEventListener("click", copyCurrentQuery);
+        els.resetStorageBtn.addEventListener("click", async () => {
+          const confirmed = window.confirm("确定清除已保存的设置和本地文件缓存吗？");
+          if (!confirmed) return;
+          window.clearTimeout(persistTimer);
+          try {
+            localStorage.removeItem(STORAGE_KEY);
+          } catch {
+            // ignore
+          }
+          await clearSelectedFile();
+          storageDbPromise = null;
+          Object.assign(state, {
+            ...initialState,
+            imageMode: "get",
+            file: null,
+            fileName: "",
+            filePreviewUrl: "",
+            marginX: Number(initialState.marginX) || 0,
+            marginXUnit: "px",
+            marginY: Number(initialState.marginY) || 0,
+            marginYUnit: "px",
+          });
+          clearUploadState();
+          refreshAll(false);
+        });
 
-        syncControlValues();
-        refreshAll();
+        const bootstrap = async () => {
+          try {
+            const rawSnapshot = localStorage.getItem(STORAGE_KEY);
+            if (rawSnapshot) {
+              applyPersistedState(JSON.parse(rawSnapshot));
+            }
+          } catch {
+            // snapshot 解析失败时继续使用服务端初始值。
+          }
+
+          try {
+            const savedFile = await loadSelectedFile();
+            if (savedFile) {
+              state.file = savedFile;
+              state.fileName = savedFile.name || "selected-file";
+              state.filePreviewUrl = URL.createObjectURL(savedFile);
+            }
+          } catch {
+            // 没有文件缓存或浏览器不支持 IndexedDB，静默降级。
+          }
+
+          syncControlValues();
+          refreshAll();
+
+          if (state.file && state.imageMode === "get" && !state.image && apiImageBedUploadUrl) {
+            await restorePreviewImageFromFile();
+          }
+        };
+
+        bootstrap();
       })();

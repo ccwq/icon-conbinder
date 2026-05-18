@@ -25,6 +25,8 @@
  * shadowOffsetY  {number}  (default: 5)
  * exportSquare   {0|1}     (default: 1)
  * exportStrategy {string}  center|bottom (default: center)
+ * marginX        {string}  水平方向每侧额外边距，支持 px 后缀或 % (基准 iconSize)，如 "10px"/"5%" (default: "0px")
+ * marginY        {string}  垂直方向每侧额外边距，同上 (default: "0px")
  * antiAliasScale {1|2|4}   (default: 1)
  * resizeStrategy {string}  smooth-high|pixelated|step-down|sharp-lanczos3 (default: smooth-high)
  * image          {string}  可选，图片输入：完整 URL / 相对路径 / data:image/*;base64,...
@@ -295,6 +297,21 @@ const MAX_RENDER_DIMENSION = 4096;
 
 // ─── 参数解析与默认值 ──────────────────────────────────────────────────────────
 
+/**
+ * 解析边距参数，支持 "10px" / "5%" / 纯数字（视为 px）。
+ * % 基准为 iconSize（图标高度），结果始终 >= 0。
+ */
+function parseMarginParam(raw, iconSize) {
+  if (raw === undefined || raw === null) return 0;
+  const str = String(raw).trim();
+  if (str.endsWith("%")) {
+    const pct = parseFloat(str);
+    return Number.isNaN(pct) ? 0 : Math.max(0, (pct / 100) * iconSize);
+  }
+  const num = parseFloat(str.endsWith("px") ? str.slice(0, -2) : str);
+  return Number.isNaN(num) ? 0 : Math.max(0, num);
+}
+
 function parseState(query) {
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const parseIntOrFallback = (value, fallback) => {
@@ -358,13 +375,12 @@ function parseState(query) {
     ),
   };
 
+  // 先解析 iconSize，供 margin % 计算使用
+  const iconSize = clamp(parseIntOrFallback(query.iconSize, defaults.iconSize), 1, 2048);
+
   return {
     shape: oneOf(query.shape, Object.keys(SHAPES), defaults.shape),
-    iconSize: clamp(
-      parseIntOrFallback(query.iconSize, defaults.iconSize),
-      1,
-      2048
-    ),
+    iconSize,
     imageScale: clamp(
       query.imageScale === undefined
         ? defaults.imageScale
@@ -460,6 +476,9 @@ function parseState(query) {
       defaults.resizeStrategy
     ),
     image: query.image === undefined || query.image === "" ? null : query.image,
+    // 每侧额外边距（已解析为 px），>= 0
+    marginX: parseMarginParam(query.marginX, iconSize),
+    marginY: parseMarginParam(query.marginY, iconSize),
   };
 }
 
@@ -474,7 +493,12 @@ function getLayout(state) {
   const shapeWidth = bboxWidth * scale;
   const shapeHeight = bboxHeight * scale;
   const strokePad = Math.max(0, state.borderWidth);
-  const contourPad = 0;
+  // 自动计算 contour 外扩补偿：
+  //   外扩描边超出 borderWidth 的半宽 = contourOuterWidth × 0.35
+  //   blur 扩散半径（参照 shadow 的 1.5× 系数）= contourOuterGlow × 0.5 × 1.5
+  const contourPad = state.contourEnhance
+    ? Math.ceil(state.contourOuterWidth * 0.35 + state.contourOuterGlow * 0.75)
+    : 0;
   const shadowSpread = state.enableShadow
     ? Math.max(0, Math.ceil(state.shadowBlur * 1.5))
     : 0;
@@ -486,10 +510,13 @@ function getLayout(state) {
   const shadowExtraRight = shadowSpread + Math.max(0, shadowOffsetX);
   const shadowExtraTop = shadowSpread + Math.max(0, -shadowOffsetY);
   const shadowExtraBottom = shadowSpread + Math.max(0, shadowOffsetY);
-  const leftPad = Math.ceil(strokePad + shadowExtraLeft + contourPad);
-  const rightPad = Math.ceil(strokePad + shadowExtraRight + contourPad);
-  const topPad = Math.ceil(strokePad + shadowExtraTop + contourPad);
-  const bottomPad = Math.ceil(strokePad + shadowExtraBottom + contourPad);
+  // 手动边距修正：每侧各加 marginX / marginY 像素，补偿外扩效果导致的裁剪
+  const marginXPx = Math.ceil(Math.max(0, state.marginX || 0));
+  const marginYPx = Math.ceil(Math.max(0, state.marginY || 0));
+  const leftPad = Math.ceil(strokePad + shadowExtraLeft + contourPad) + marginXPx;
+  const rightPad = Math.ceil(strokePad + shadowExtraRight + contourPad) + marginXPx;
+  const topPad = Math.ceil(strokePad + shadowExtraTop + contourPad) + marginYPx;
+  const bottomPad = Math.ceil(strokePad + shadowExtraBottom + contourPad) + marginYPx;
 
   const rectWidth = Math.ceil(shapeWidth + leftPad + rightPad);
   const rectHeight = Math.ceil(shapeHeight + topPad + bottomPad);
