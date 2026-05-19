@@ -28,7 +28,7 @@ http://localhost:3000/ui.html?shape=squircle&iconSize=200&contourEnhance=1&antiA
 ## 2. 交互式演示
 
 <iframe
-  src="/examples/index.html"
+  src="/icon-conbinder/examples/index.html"
   width="100%"
   height="600"
   style="border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa;"
