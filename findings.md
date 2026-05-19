@@ -138,3 +138,14 @@
   - `thumbsLoaded` 为 `4`
   - `sourceLabel` 为 `hospital.png`
 - 这说明页面打开时不是空白，也不是只渲染壳结构后等二次交互才出现预览图。
+
+## 2026/05/19 - GitHub Pages 部署延迟与重载验证
+
+### 观察
+- 线上 `https://ccwq.github.io/icon-conbinder/examples/index.html` 在刚 push 后可能先看到旧 DOM，表现为 `sourceSrc = null` 或渲染失败。
+- 但同一地址的 HTML 已经切换到新哈希资产 `index-DPnRCXRO.js` / `index-CYDiwCAC.css`，说明 Pages 侧产物已更新，只是首轮浏览器会话抢到了旧页面状态。
+- 对当前会话执行一次 `reload` 后，线上页立即恢复为：
+  - `sourceSrc = ./hospital.png`
+  - `sourceComplete = true`
+  - `thumbsLoaded = 4`
+- 这表明验证线上页面时，push 后最好先看 HTML 资源哈希，再对浏览器会话做一次显式重载。

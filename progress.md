@@ -172,3 +172,17 @@
 - `sourceNaturalWidth = 24`
 - `thumbsLoaded = 4`
 - 页面不是空白页，且打开即显示可见预览与参数面板
+
+## 2026/05/19 - GitHub Pages 线上回归确认
+
+### 已完成
+1. ✅ `git push` 成功推送到 `master`
+2. ✅ 线上 `examples/index.html` 的 HTML 已切到新资产哈希
+3. ✅ 浏览器会话重载后，线上页恢复显示默认 `hospital.png` 预览图
+
+### 验证结果
+- `https://ccwq.github.io/icon-conbinder/examples/index.html?ts=883183b`
+- `sourceSrc = ./hospital.png`
+- `sourceComplete = true`
+- `thumbsLoaded = 4`
+- 线上页可正常查看和使用
