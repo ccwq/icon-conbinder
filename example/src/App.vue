@@ -5,27 +5,27 @@ import { renderIcon } from 'icon-combinder'
 // 默认参数
 const defaultState = {
   shape: 'pin',
-  iconSize: 128,
-  image: '/sample-icon.png',
-  imageScale: 1.0,
+  iconSize: 36,
+  image: 'file:hospital.png',
+  imageScale: 0.03,
   imageOffsetY: 0,
-  borderWidth: 4,
-  lineJoin: 'round',
+  borderWidth: 3,
+  lineJoin: 'miter',
   borderColor: '#ef4444',
   bgColor: '#ffffff',
-  enableShadow: true,
+  enableShadow: false,
   shadowBlur: 10,
   shadowOffsetY: 5,
   exportSquare: true,
   exportStrategy: 'center',
-  antiAliasScale: 1,
+  antiAliasScale: 2,
   resizeStrategy: 'smooth-high',
   contourEnhance: true,
-  contourOuterGlow: 2,
-  contourOuterWidth: 6,
-  contourMainWidth: 3,
-  contourInnerWidth: 1,
-  contourCornerSoftness: 0.12,
+  contourOuterGlow: 0,
+  contourOuterWidth: 2,
+  contourMainWidth: 0,
+  contourInnerWidth: 0,
+  contourCornerSoftness: 0,
 }
 
 // 持久化配置
@@ -143,10 +143,10 @@ function writePersistedState() {
 const form = ref({ ...defaultState })
 
 // 图像来源
-const sourceKind = ref('url')
+const sourceKind = ref('file')
 const sourceFile = ref(null)
-const sourceFileName = ref('')
-const sourcePreviewUrl = ref('')
+const sourceFileName = ref('hospital.png')
+const sourcePreviewUrl = ref('./hospital.png')
 const sourceDataUrl = ref('')
 const sourceObjectUrl = ref('')
 const previewBackgroundColor = ref('#ef4444')
@@ -200,7 +200,7 @@ const lineJoinOptions = [
 ]
 
 // 示例图片URL
-const sampleImageUrl = '/sample-icon.png'
+const sampleImageUrl = './hospital.png'
 
 // 展开/折叠控制
 const expandedSections = ref({
@@ -226,6 +226,9 @@ function toggleSection(key) {
 function selectSourceKind(kind) {
   if (kind === 'preset-cache') return
   sourceKind.value = kind
+  if (kind === 'url' && (!form.value.image || String(form.value.image).startsWith('file:'))) {
+    form.value.image = sampleImageUrl
+  }
 }
 
 function clampNumber(value, min, max) {
@@ -311,13 +314,17 @@ function revokeSourceObjectUrl() {
   }
 }
 
-function resetSourceState() {
+function applyDefaultSourceState() {
   revokeSourceObjectUrl()
-  sourceKind.value = 'url'
+  sourceKind.value = 'file'
   sourceFile.value = null
-  sourceFileName.value = ''
-  sourcePreviewUrl.value = ''
+  sourceFileName.value = 'hospital.png'
+  sourcePreviewUrl.value = './hospital.png'
   sourceDataUrl.value = ''
+}
+
+function resetSourceState() {
+  applyDefaultSourceState()
 }
 
 function clearSourceFileInput() {
@@ -384,8 +391,11 @@ function getRenderSource() {
     if (sourceFile.value) {
       return { kind: 'file', file: sourceFile.value }
     }
-    if (sourceDataUrl.value || sourcePreviewUrl.value) {
-      return { kind: 'data', value: sourceDataUrl.value || sourcePreviewUrl.value }
+    if (sourceDataUrl.value) {
+      return { kind: 'data', value: sourceDataUrl.value }
+    }
+    if (sourcePreviewUrl.value) {
+      return { kind: 'url', value: sourcePreviewUrl.value }
     }
   }
 
@@ -435,9 +445,6 @@ onMounted(async () => {
     sourceFileName.value = restored.sourceFileName || ''
     sourceDataUrl.value = restored.sourceDataUrl || ''
     sourcePreviewUrl.value = restored.sourcePreviewUrl || (restoredSourceKind === 'file' ? restored.sourceDataUrl || '' : '')
-    if (sourceKind.value === 'file' && !sourceDataUrl.value && !sourcePreviewUrl.value) {
-      sourceKind.value = 'url'
-    }
     if (sourceKind.value === 'file' && sourcePreviewUrl.value.startsWith('blob:') && !sourceDataUrl.value) {
       sourceKind.value = 'url'
       sourceFileName.value = ''
@@ -452,6 +459,12 @@ onMounted(async () => {
     if (typeof restored.previewBackgroundColor === 'string' && restored.previewBackgroundColor) {
       previewBackgroundColor.value = normalizeHexColor(restored.previewBackgroundColor, previewBackgroundColor.value)
     }
+  }
+  if (sourceKind.value !== 'file' && !sourceDataUrl.value && !sourcePreviewUrl.value) {
+    applyDefaultSourceState()
+  }
+  if (sourceKind.value === 'file' && !sourceDataUrl.value && !sourcePreviewUrl.value) {
+    applyDefaultSourceState()
   }
   syncImageScaleLinkBase()
   await renderIcon_()
@@ -518,7 +531,11 @@ function resetParams() {
   previewBackgroundColor.value = '#ef4444'
   clearImageScaleLinkTimer()
   syncImageScaleLinkBase()
-  clearSourceFileInput()
+  resetSourceState()
+  const fileInput = document.getElementById('sourceFileInput')
+  if (fileInput) {
+    fileInput.value = ''
+  }
   renderIcon_()
   writePersistedState()
 }
@@ -540,18 +557,11 @@ const copyFormats = [
   { value: 'cli', label: 'CLI' },
 ]
 
-const portalLinks = [
-  { href: '../', label: '文档首页', note: 'Docs Home' },
-  { href: '../api', label: 'API 参考', note: 'Reference' },
-  { href: '../examples/basic', label: '示例说明', note: 'Examples' },
-  { href: 'https://github.com/ccwq/icon-conbinder', label: 'GitHub', note: 'Repository', external: true },
-]
-
-const localLinks = [
-  { href: '../guide/getting-started', label: '快速开始', meta: 'Guide' },
-  { href: '../api', label: '文档 API', meta: 'Docs' },
-  { href: '/icon', label: 'GET /icon', meta: 'Local server' },
-  { href: '/info', label: 'GET /info', meta: 'Layout info' },
+const compactLinks = [
+  { href: '../', label: '文档' },
+  { href: '../api', label: 'API' },
+  { href: '../examples/basic', label: '示例' },
+  { href: 'https://github.com/ccwq/icon-conbinder', label: 'GitHub', external: true },
 ]
 
 async function copyParams() {
@@ -600,36 +610,25 @@ function showCopySuccess() {
 
 <template>
   <div class="app">
-    <section class="hero-strip">
-      <div class="hero-copy">
-        <span class="hero-kicker">FULLSCREEN LAB</span>
-        <h1>Icon Combinder 交互演示工作台</h1>
-        <p>
-          这里不再把交互演示塞进文档 iframe，而是作为独立全屏页面使用。文档、API、仓库和本地接口都从这里串联。
-        </p>
-      </div>
-      <nav class="hero-links" aria-label="页面导航">
-        <a
-          v-for="item in portalLinks"
-          :key="item.href"
-          class="hero-link"
-          :href="item.href"
-          :target="item.external ? '_blank' : undefined"
-          :rel="item.external ? 'noreferrer' : undefined"
-        >
-          <strong>{{ item.label }}</strong>
-          <span>{{ item.note }}</span>
-        </a>
-      </nav>
-    </section>
-
     <header class="toolbar">
       <div class="toolbar-left">
-        <div class="brand">
-          <span class="eyebrow">ICON COMBINDER</span>
-          <h1>参数编辑器</h1>
+        <div class="brand brand-compact">
+          <span class="eyebrow">FULLSCREEN LAB</span>
+          <h1>Icon Combinder</h1>
+          <span class="version">参数演示</span>
         </div>
-        <span class="version">ESM Browser</span>
+        <nav class="toolbar-links" aria-label="页面导航">
+          <a
+            v-for="item in compactLinks"
+            :key="item.href"
+            class="toolbar-link"
+            :href="item.href"
+            :target="item.external ? '_blank' : undefined"
+            :rel="item.external ? 'noreferrer' : undefined"
+          >
+            {{ item.label }}
+          </a>
+        </nav>
       </div>
 
       <div class="toolbar-center">
@@ -663,18 +662,6 @@ function showCopySuccess() {
         </button>
       </div>
     </header>
-
-    <section class="jump-deck" aria-label="相关入口">
-      <a
-        v-for="item in localLinks"
-        :key="item.href"
-        class="jump-card"
-        :href="item.href"
-      >
-        <span class="jump-meta">{{ item.meta }}</span>
-        <strong>{{ item.label }}</strong>
-      </a>
-    </section>
 
     <main class="workspace">
       <aside class="panel panel-left">
@@ -732,7 +719,7 @@ function showCopySuccess() {
                 <div v-else class="source-preview-empty">请选择本地文件</div>
                 <div class="source-preview-meta">
                   <strong>{{ sourceFileName || '未选择文件' }}</strong>
-                  <span>{{ sourceDataUrl ? 'data: 已缓存' : '临时文件' }}</span>
+                  <span>{{ sourceFile ? (sourceDataUrl ? 'data: 已缓存' : '临时文件') : '内置资源' }}</span>
                 </div>
               </div>
               <div class="source-note">本地文件会作为 `browser.renderIcon(..., { kind: 'file' })` 的输入；若已缓存为 data URL，刷新后还能继续使用。</div>
@@ -1235,9 +1222,7 @@ function showCopySuccess() {
   z-index: 0;
 }
 
-.hero-strip,
 .toolbar,
-.jump-deck,
 .workspace,
 .export-panel,
 .toast {
@@ -1245,109 +1230,15 @@ function showCopySuccess() {
   z-index: 1;
 }
 
-.hero-strip {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
-  gap: 16px;
-  align-items: stretch;
-  padding: 18px 20px;
-  margin-bottom: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at top left, rgba(34, 197, 94, 0.14), transparent 28%),
-    radial-gradient(circle at 82% 22%, rgba(14, 165, 233, 0.2), transparent 26%),
-    linear-gradient(135deg, rgba(8, 13, 20, 0.94), rgba(15, 23, 42, 0.9));
-  backdrop-filter: blur(14px);
-  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.28);
-}
-
-.hero-copy {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.hero-kicker {
-  color: #7dd3fc;
-  font-size: 10px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-}
-
-.hero-copy h1 {
-  margin: 0;
-  font-size: clamp(30px, 4vw, 52px);
-  line-height: 0.95;
-  letter-spacing: -0.06em;
-  font-weight: 700;
-}
-
-.hero-copy p {
-  margin: 0;
-  max-width: 58ch;
-  color: #b6c4d8;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.hero-links {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.hero-link,
-.jump-card {
-  text-decoration: none;
-}
-
-.hero-link {
-  min-height: 112px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 6px;
-  padding: 14px;
-  border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
-    rgba(4, 9, 16, 0.72);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
-}
-
-.hero-link:hover,
-.jump-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(125, 211, 252, 0.42);
-}
-
-.hero-link strong,
-.jump-card strong {
-  color: #f8fbff;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.hero-link span {
-  color: #8fa0b7;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(10, 14, 20, 0.88);
   backdrop-filter: blur(14px);
   box-shadow: 0 20px 54px rgba(0, 0, 0, 0.28);
@@ -1356,39 +1247,79 @@ function showCopySuccess() {
 .toolbar-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.brand {
+.brand,
+.brand-compact {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .eyebrow {
-  font-size: 10px;
-  letter-spacing: 0.22em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  letter-spacing: 0.18em;
   color: #8aa0ba;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.7);
+  white-space: nowrap;
 }
 
 .brand h1 {
   margin: 0;
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1.1;
   font-weight: 700;
   letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 
 .version {
-  padding: 6px 10px;
+  padding: 4px 8px;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.8);
   color: #9fb0c9;
-  font-size: 11px;
+  font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.toolbar-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.toolbar-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.72);
+  color: #c9d3e3;
+  font-size: 10px;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.toolbar-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(125, 211, 252, 0.36);
+  background: rgba(30, 41, 59, 0.92);
 }
 
 .toolbar-center {
@@ -1405,18 +1336,18 @@ function showCopySuccess() {
 .status-chip {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 6px 10px;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.8);
   color: #b9c5d8;
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #f59e0b;
   box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.08);
@@ -1434,22 +1365,22 @@ function showCopySuccess() {
 .toolbar-right {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .btn-tool {
-  min-height: 36px;
-  padding: 0 14px;
+  min-height: 30px;
+  padding: 0 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 999px;
   background: rgba(15, 23, 42, 0.84);
   color: #c9d3e3;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 600;
   transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
 }
@@ -1465,38 +1396,6 @@ function showCopySuccess() {
   background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
   color: #fff;
   box-shadow: 0 16px 30px rgba(37, 99, 235, 0.22);
-}
-
-.jump-deck {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.jump-card {
-  min-height: 84px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  background: rgba(12, 17, 26, 0.72);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
-  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
-}
-
-.jump-card:hover {
-  background: rgba(15, 23, 42, 0.84);
-}
-
-.jump-meta {
-  color: #7dd3fc;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
 }
 
 .workspace {
@@ -2461,14 +2360,6 @@ function showCopySuccess() {
 }
 
 @media (max-width: 1240px) {
-  .hero-strip {
-    grid-template-columns: 1fr;
-  }
-
-  .jump-deck {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .toolbar {
     grid-template-columns: 1fr;
     justify-items: stretch;
@@ -2496,9 +2387,8 @@ function showCopySuccess() {
 }
 
 @media (max-width: 920px) {
-  .hero-links,
-  .jump-deck {
-    grid-template-columns: 1fr;
+  .toolbar-left {
+    flex-wrap: wrap;
   }
 
   .workspace {
@@ -2528,13 +2418,13 @@ function showCopySuccess() {
     padding: 10px;
   }
 
-  .hero-strip {
-    padding: 16px;
-    border-radius: 22px;
+  .toolbar {
+    padding: 8px 10px;
+    border-radius: 14px;
   }
 
-  .hero-copy h1 {
-    font-size: 30px;
+  .brand {
+    gap: 6px;
   }
 
   .panel-subtitle {
@@ -2563,6 +2453,11 @@ function showCopySuccess() {
 
   .btn-tool {
     flex: 1 1 auto;
+  }
+
+  .toolbar-link {
+    min-height: 22px;
+    padding: 0 7px;
   }
 }
 </style>

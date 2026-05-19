@@ -4,7 +4,7 @@
 
 ### 关于浏览器操作
 
-使用agent-browser --cdp 6969 进行处理
+使用agent-browser --cdp 9696 进行处理
 
 ### 核心模块
 - `core/index.js` - 提供 UMD 入口 `IconCombinderCore`
@@ -126,3 +126,15 @@
   - `examples/index.html` 已更新，但 `./assets/*.js` 请求结果异常
   - 浏览器标签中 `#app` 为空，像是页面白屏
 - 换新端口后，`/examples/index.html` 运行态已确认存在 `.hero-strip`、顶部导航和本地接口入口。
+
+## 2026/05/19 - example 默认预览图与首屏可见性
+
+### 观察
+- `example/src/App.vue` 的默认来源已经固定为 `file:hospital.png`，并在首次打开时自动恢复为本地文件模式。
+- 在 `http://string.localhost:4178/icon-conbinder/examples/index.html` 的实机验证中：
+  - `sourceSrc` 为 `./hospital.png`
+  - `sourceComplete` 为 `true`
+  - `sourceNaturalWidth` 为 `24`
+  - `thumbsLoaded` 为 `4`
+  - `sourceLabel` 为 `hospital.png`
+- 这说明页面打开时不是空白，也不是只渲染壳结构后等二次交互才出现预览图。

@@ -156,3 +156,19 @@
   2. 同步 `example/dist/*` → `docs/public/examples/`
   3. `npm run docs:build`
   4. 启动新的 preview 端口验证
+
+## 2026/05/19 - 默认预览图与线上可用性确认
+
+### 已完成
+1. ✅ `example/src/App.vue` 默认来源固定为 `file:hospital.png`
+2. ✅ `example/public/hospital.png` 与 `docs/public/examples/hospital.png` 已同步
+3. ✅ `npm test` 通过
+4. ✅ `cd example && npm run build` 通过
+5. ✅ `npm run docs:build` 通过
+6. ✅ 在 `http://string.localhost:4178/icon-conbinder/examples/index.html` 上验证首屏存在预览图
+
+### 关键验证
+- `sourceSrc = ./hospital.png`
+- `sourceNaturalWidth = 24`
+- `thumbsLoaded = 4`
+- 页面不是空白页，且打开即显示可见预览与参数面板

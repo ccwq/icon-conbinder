@@ -45,7 +45,8 @@
   - `npx vitepress preview docs --host 127.0.0.1 --port 4174`
 - **结果**:
   - `/examples/basic` 文档内容已不含 `iframe`
-  - `/examples/index.html` 运行态可见全屏导航与本地接口入口
+  - `/examples/index.html` 运行态可见全屏导航、本地接口入口，以及默认 `hospital.png` 预览图
+  - 新的实机验证地址为 `http://string.localhost:4178/icon-conbinder/examples/index.html`
 
 ### 5. 环境经验固化
 - **状态**: complete
