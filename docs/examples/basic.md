@@ -1,6 +1,6 @@
 # 基本示例
 
-这个页面放最常复制的请求模板。想看更偏场景化的组合，请看 [进阶示例](/examples/recipes)。
+这个页面放最常复制的请求模板。交互演示已改成独立全屏工作台，不再以内嵌 `iframe` 的形式塞进文档页。
 
 ## 1. 打开工作台
 
@@ -14,27 +14,14 @@ http://localhost:3000/ui.html
 http://localhost:3000/ui.html?shape=squircle&iconSize=200&contourEnhance=1&antiAliasScale=2
 ```
 
-## 2. 交互式演示
+## 2. 全屏交互演示
 
-<iframe
-  src="/icon-conbinder/examples/index.html"
-  width="100%"
-  height="600"
-  style="border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa;"
-  title="Icon Combinder 交互演示"
-  loading="lazy"
-></iframe>
+- [打开全屏演示工作台](/examples/index.html)
+- [查看 API 文档](/api)
+- [查看 GitHub 仓库](https://github.com/ccwq/icon-conbinder)
 
-## 2. 交互式演示
-
-<iframe
-  src="/icon-conbinder/examples/index.html"
-  width="100%"
-  height="600"
-  style="border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa;"
-  title="Icon Combinder 交互演示"
-  loading="lazy"
-></iframe>
+说明：
+独立演示页会把文档、API、GitHub 和本地接口入口串在一起，适合直接调参、复制请求和导出图片。
 
 ## 3. GET 请求
 
@@ -42,7 +29,7 @@ http://localhost:3000/ui.html?shape=squircle&iconSize=200&contourEnhance=1&antiA
 curl "http://localhost:3000/icon?shape=pin&iconSize=128&borderColor=%23ef4444&bgColor=%23ffffff&enableShadow=1"
 ```
 
-## 3. POST 请求
+## 4. POST 请求
 
 ```bash
 curl -X POST "http://localhost:3000/icon" \
@@ -55,7 +42,7 @@ curl -X POST "http://localhost:3000/icon" \
   -o output.png
 ```
 
-## 4. 先上传再生成
+## 5. 先上传再生成
 
 ```bash
 curl -X POST "http://localhost:3000/__imgbed/upload" \
@@ -64,14 +51,14 @@ curl -X POST "http://localhost:3000/__imgbed/upload" \
 
 拿到返回的 `url` 后，再拼到 `/icon?image=...` 里即可。
 
-## 5. 直接导出成 PNG
+## 6. 直接导出成 PNG
 
 ```bash
 curl "http://localhost:3000/icon?shape=squircle&iconSize=180&enableShadow=0&exportSquare=1" \
   -o squircle.png
 ```
 
-## 6. 查询布局信息
+## 7. 查询布局信息
 
 ```bash
 curl "http://localhost:3000/info?shape=hexagon&iconSize=180&antiAliasScale=2"

@@ -88,3 +88,41 @@
 ### 观察
 - 四个背景窗口中的 `<img>` 已取消 CSS 宽高约束，恢复为原始渲染尺寸显示。
 - 浏览器测量结果显示，卡片尺寸约 `239 × 118`，图片本身约 `26 × 26`，证明没有再被背景窗二次放大。
+
+## 2026/05/19 - 文档页不应再内嵌 example iframe
+
+### 观察
+- `docs/examples/basic.md` 和 `docs/examples/recipes.md` 原先都把 `example` 以固定 `height="600"` 的 `iframe` 重复嵌入。
+- 这种方式天然会把交互工作台压缩成文档里的局部窗口，无法满足“全屏工具页”的使用预期。
+- 正确方向是让文档页只保留入口链接，把交互工作台当成独立页面 `/examples/index.html`。
+
+## 2026/05/19 - example 页的导航串联规则
+
+### 观察
+- 用户要求在 example 页中显式串联 GitHub、API 和文档入口，而不是只保留参数编辑器本体。
+- 经过实现和浏览器验证，顶部导航应至少包含：
+  - `文档首页`
+  - `API 参考`
+  - `示例说明`
+  - `GitHub`
+- 页面内快捷入口应至少包含：
+  - `快速开始`
+  - `文档 API`
+  - `GET /icon`
+  - `GET /info`
+
+## 2026/05/19 - 开发环境与测试环境的正确同步链路
+
+### 观察
+- `example` 页在文档站中的真实来源是 `docs/public/examples/` 的静态副本，而不是 `example/` 源码目录。
+- 因此修改 `example/src/*` 后，如果没有重新构建并同步 `example/dist/*` 到 `docs/public/examples/`，文档站里的全屏演示页不会更新。
+- 稳定链路是：
+  1. `cd example && npm run build`
+  2. 同步 `example/dist/*` 到 `docs/public/examples/`
+  3. `npm run docs:build`
+  4. 用新的 `vitepress preview` 端口做验证
+- 旧 preview 进程可能继续服务旧资源，表现为：
+  - 页面看起来还是旧版
+  - `examples/index.html` 已更新，但 `./assets/*.js` 请求结果异常
+  - 浏览器标签中 `#app` 为空，像是页面白屏
+- 换新端口后，`/examples/index.html` 运行态已确认存在 `.hero-strip`、顶部导航和本地接口入口。

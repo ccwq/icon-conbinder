@@ -540,6 +540,20 @@ const copyFormats = [
   { value: 'cli', label: 'CLI' },
 ]
 
+const portalLinks = [
+  { href: '../', label: '文档首页', note: 'Docs Home' },
+  { href: '../api', label: 'API 参考', note: 'Reference' },
+  { href: '../examples/basic', label: '示例说明', note: 'Examples' },
+  { href: 'https://github.com/ccwq/icon-conbinder', label: 'GitHub', note: 'Repository', external: true },
+]
+
+const localLinks = [
+  { href: '../guide/getting-started', label: '快速开始', meta: 'Guide' },
+  { href: '../api', label: '文档 API', meta: 'Docs' },
+  { href: '/icon', label: 'GET /icon', meta: 'Local server' },
+  { href: '/info', label: 'GET /info', meta: 'Layout info' },
+]
+
 async function copyParams() {
   const text = generateParamsText()
   try {
@@ -586,6 +600,29 @@ function showCopySuccess() {
 
 <template>
   <div class="app">
+    <section class="hero-strip">
+      <div class="hero-copy">
+        <span class="hero-kicker">FULLSCREEN LAB</span>
+        <h1>Icon Combinder 交互演示工作台</h1>
+        <p>
+          这里不再把交互演示塞进文档 iframe，而是作为独立全屏页面使用。文档、API、仓库和本地接口都从这里串联。
+        </p>
+      </div>
+      <nav class="hero-links" aria-label="页面导航">
+        <a
+          v-for="item in portalLinks"
+          :key="item.href"
+          class="hero-link"
+          :href="item.href"
+          :target="item.external ? '_blank' : undefined"
+          :rel="item.external ? 'noreferrer' : undefined"
+        >
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.note }}</span>
+        </a>
+      </nav>
+    </section>
+
     <header class="toolbar">
       <div class="toolbar-left">
         <div class="brand">
@@ -626,6 +663,18 @@ function showCopySuccess() {
         </button>
       </div>
     </header>
+
+    <section class="jump-deck" aria-label="相关入口">
+      <a
+        v-for="item in localLinks"
+        :key="item.href"
+        class="jump-card"
+        :href="item.href"
+      >
+        <span class="jump-meta">{{ item.meta }}</span>
+        <strong>{{ item.label }}</strong>
+      </a>
+    </section>
 
     <main class="workspace">
       <aside class="panel panel-left">
@@ -1186,12 +1235,108 @@ function showCopySuccess() {
   z-index: 0;
 }
 
+.hero-strip,
 .toolbar,
+.jump-deck,
 .workspace,
 .export-panel,
 .toast {
   position: relative;
   z-index: 1;
+}
+
+.hero-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
+  gap: 16px;
+  align-items: stretch;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.14), transparent 28%),
+    radial-gradient(circle at 82% 22%, rgba(14, 165, 233, 0.2), transparent 26%),
+    linear-gradient(135deg, rgba(8, 13, 20, 0.94), rgba(15, 23, 42, 0.9));
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.28);
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hero-kicker {
+  color: #7dd3fc;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.hero-copy h1 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 52px);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  font-weight: 700;
+}
+
+.hero-copy p {
+  margin: 0;
+  max-width: 58ch;
+  color: #b6c4d8;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.hero-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hero-link,
+.jump-card {
+  text-decoration: none;
+}
+
+.hero-link {
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent),
+    rgba(4, 9, 16, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.hero-link:hover,
+.jump-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(125, 211, 252, 0.42);
+}
+
+.hero-link strong,
+.jump-card strong {
+  color: #f8fbff;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.hero-link span {
+  color: #8fa0b7;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .toolbar {
@@ -1200,6 +1345,7 @@ function showCopySuccess() {
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
+  margin-bottom: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   background: rgba(10, 14, 20, 0.88);
@@ -1321,11 +1467,43 @@ function showCopySuccess() {
   box-shadow: 0 16px 30px rgba(37, 99, 235, 0.22);
 }
 
+.jump-deck {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.jump-card {
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: rgba(12, 17, 26, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.jump-card:hover {
+  background: rgba(15, 23, 42, 0.84);
+}
+
+.jump-meta {
+  color: #7dd3fc;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(420px, 1.18fr) minmax(246px, 0.78fr) minmax(240px, 0.64fr);
   gap: 10px 12px;
-  padding: 12px 0 10px;
+  padding: 2px 0 10px;
   align-items: start;
   grid-auto-rows: min-content;
 }
@@ -2283,6 +2461,14 @@ function showCopySuccess() {
 }
 
 @media (max-width: 1240px) {
+  .hero-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .jump-deck {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .toolbar {
     grid-template-columns: 1fr;
     justify-items: stretch;
@@ -2310,6 +2496,11 @@ function showCopySuccess() {
 }
 
 @media (max-width: 920px) {
+  .hero-links,
+  .jump-deck {
+    grid-template-columns: 1fr;
+  }
+
   .workspace {
     grid-template-columns: 1fr;
   }
@@ -2335,6 +2526,15 @@ function showCopySuccess() {
 @media (max-width: 640px) {
   .app {
     padding: 10px;
+  }
+
+  .hero-strip {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .hero-copy h1 {
+    font-size: 30px;
   }
 
   .panel-subtitle {

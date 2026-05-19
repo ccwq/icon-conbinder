@@ -1,60 +1,68 @@
-# 计划：将 example/dist 集成到 VitePress
+# 计划：全屏演示页改造与环境经验固化
 
 ## 目标
-将 `example/` 的构建产物通过 iframe 嵌入式嵌入到 `docs/` 的 VitePress 示例页面中，发布到 GitHub Pages。
+
+1. 取消文档页中固定高度 `iframe` 的交互演示嵌入方式
+2. 将 `example` 改成独立全屏工作台
+3. 在工作台内串联文档、API、GitHub 和本地接口入口
+4. 固化开发环境与测试环境的正确验证链路
 
 ---
 
 ## 步骤
 
-### 1. 修改 example 的 vite base 配置
-- **文件**: `example/vite.config.js`
-- **操作**: 添加 `base: '/examples/'`，使资源路径与 docs base 路径对齐
-- **验证**: 构建后 `dist/index.html` 中资源路径为 `/examples/assets/...`
+### 1. 文档页入口改造
+- **状态**: complete
+- **文件**:
+  - `docs/examples/basic.md`
+  - `docs/examples/recipes.md`
+- **结果**:
+  - 删除重复的 `iframe`
+  - 改为独立演示入口和文档/API/GitHub 链接
 
-### 2. 修改 example 的 index.html 引用路径
-- **文件**: `example/index.html`
-- **操作**: 将 `href="/favicon.svg"` 改为 `/examples/favicon.svg`，`src="/src/main.js"` 改为 `/examples/src/main.js`（Vite 会处理）
-- **验证**: 构建后所有资源可被 `/examples/` base 正确解析
+### 2. Example 全屏工作台改造
+- **状态**: complete
+- **文件**:
+  - `example/src/App.vue`
+- **结果**:
+  - 增加 `FULLSCREEN LAB` 顶部区域
+  - 串联 `文档首页 / API 参考 / 示例说明 / GitHub`
+  - 增加 `快速开始 / 文档 API / GET /icon / GET /info` 快捷入口
 
-### 3. 创建 VitePress customTheme
-- **目录**: `docs/.vitepress/theme/`
-- **文件**: `theme/index.js`
-- **操作**: 导出默认 theme，支持 `doBeforeBuild` 钩子触发 example 联动构建
-- **钩子逻辑**:
-  1. `doBeforeBuild` 中执行 `cd example && vite build`
-  2. 将 `example/dist/*` 复制到 `docs/public/examples/`
-  3. 清理旧产物
+### 3. 静态产物同步
+- **状态**: complete
+- **文件**:
+  - `docs/public/examples/*`
+- **结果**:
+  - 重新构建 `example/dist`
+  - 同步到 `docs/public/examples/`
 
-### 4. 配置 VitePress 使用 customTheme
-- **文件**: `docs/.vitepress/config.mjs`
-- **操作**: 导入并使用 customTheme
+### 4. 文档站重建与验证
+- **状态**: complete
+- **命令**:
+  - `cd example && npm run build`
+  - `npm run docs:build`
+  - `npx vitepress preview docs --host 127.0.0.1 --port 4174`
+- **结果**:
+  - `/examples/basic` 文档内容已不含 `iframe`
+  - `/examples/index.html` 运行态可见全屏导航与本地接口入口
 
-### 5. 在示例页面中嵌入 iframe
-- **文件**: `docs/examples/basic.md`、`docs/examples/recipes.md`
-- **操作**: 添加 iframe 标记，src 指向 `/examples/index.html`
-- **iframe 属性**: width, height, border, loading="lazy" 等
-
-### 6. 验证构建与部署
-- **本地验证**: `vitepress build docs` 和 `vitepress preview docs`
-- **检查点**:
-  - `docs/.vitepress/dist/examples/` 存在且结构正确
-  - iframe 页面可正常加载
-  - GitHub Pages base 路径 `/icon-conbinder/` 正确
+### 5. 环境经验固化
+- **状态**: complete
+- **文件**:
+  - `docs/guide/github-pages.md`
+  - `findings.md`
+  - `progress.md`
+- **结果**:
+  - 固化开发环境和测试环境的同步/验证规则
 
 ---
 
-## 依赖文件
-- `example/vite.config.js`
-- `example/index.html`
-- `docs/.vitepress/config.mjs`
-- `docs/examples/basic.md`
-- `docs/examples/recipes.md`
-- 新建: `docs/.vitepress/theme/index.js`
+## 关键结论
 
----
-
-## 待验证假设
-- example 的 `index.html` 中资源路径（`/favicon.svg`、`/src/main.js`）在 base 变更后仍可被正确解析
-- VitePress customTheme 的 `doBeforeBuild` 钩子可用
-- `docs/public/examples/` 会被 VitePress 作为静态资源正确托管
+- `example` 的线上页面来源于 `docs/public/examples/`，不是直接读取 `example/`
+- 修改 `example/src/*` 后，必须执行：
+  1. `cd example && npm run build`
+  2. 同步 `example/dist/*` 到 `docs/public/examples/`
+  3. `npm run docs:build`
+- 旧的 `vitepress preview` 进程可能伪装成“页面没更新”或“静态资源 404”；换新端口验证更稳

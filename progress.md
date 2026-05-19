@@ -132,3 +132,27 @@
 - ✅ Phase 2: 核心集成 - 复制 UMD 文件到 public/lib/
 - ✅ Phase 3: 参数控制 UI - App.vue 已实现
 - ✅ Phase 4-5: 测试验证 - 页面正常运行
+
+---
+
+## 2026/05/19 - 全屏演示页改造与环境经验固化
+
+### 已完成
+1. ✅ 删除 `docs/examples/basic.md` 与 `docs/examples/recipes.md` 中重复的固定高度 `iframe`
+2. ✅ 将文档页改为独立演示入口，补上 API 与 GitHub 链接
+3. ✅ 为 `example/src/App.vue` 增加全屏工作台头图区和导航串联入口
+4. ✅ 页面内补齐 `快速开始 / 文档 API / GET /icon / GET /info` 的快捷入口
+5. ✅ `cd example && npm run build` 通过
+6. ✅ 将 `example/dist/*` 同步到 `docs/public/examples/`
+7. ✅ `npm run docs:build` 通过
+8. ✅ 使用新端口 `4174` 的 `vitepress preview` 完成验证
+9. ✅ 浏览器运行态验证通过：`.hero-strip`、顶部导航、本地接口入口均存在
+
+### 关键经验
+- 旧的 `vitepress preview` 进程会干扰判断，可能让人误以为页面没更新或资源 404。
+- 修改 `example/src/*` 后，不能只看 `example/dist`，必须同步到 `docs/public/examples/` 再重建 `docs`。
+- 对这个仓库来说，更稳的验证顺序是：
+  1. `cd example && npm run build`
+  2. 同步 `example/dist/*` → `docs/public/examples/`
+  3. `npm run docs:build`
+  4. 启动新的 preview 端口验证

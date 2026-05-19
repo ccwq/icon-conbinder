@@ -2,27 +2,14 @@
 
 这里放一些更接近实际使用的组合，可以直接复制到浏览器、终端或脚本里。
 
-## 交互式演示
+## 全屏交互演示
 
-<iframe
-  src="/icon-conbinder/examples/index.html"
-  width="100%"
-  height="600"
-  style="border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa;"
-  title="Icon Combinder 进阶演示"
-  loading="lazy"
-></iframe>
+- [打开全屏演示工作台](/examples/index.html)
+- [查看 API 文档](/api)
+- [查看 GitHub 仓库](https://github.com/ccwq/icon-conbinder)
 
-## 交互式演示
-
-<iframe
-  src="/icon-conbinder/examples/index.html"
-  width="100%"
-  height="600"
-  style="border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa;"
-  title="Icon Combinder 进阶演示"
-  loading="lazy"
-></iframe>
+说明：
+交互演示已经从文档内容区抽离，不再使用固定高度 `iframe`。现在应当把它当成独立页面来使用。
 
 ## 1. 纯色徽标
 
