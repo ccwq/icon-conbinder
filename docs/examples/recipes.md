@@ -2,6 +2,17 @@
 
 这里放一些更接近实际使用的组合，可以直接复制到浏览器、终端或脚本里。
 
+## 交互式演示
+
+<iframe
+  src="/icon-conbinder/examples/index.html"
+  width="100%"
+  height="600"
+  style="border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa;"
+  title="Icon Combinder 进阶演示"
+  loading="lazy"
+></iframe>
+
 ## 1. 纯色徽标
 
 适合做最干净的发布图标。

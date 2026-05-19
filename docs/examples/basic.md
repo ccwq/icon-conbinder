@@ -14,7 +14,18 @@ http://localhost:3000/ui.html
 http://localhost:3000/ui.html?shape=squircle&iconSize=200&contourEnhance=1&antiAliasScale=2
 ```
 
-## 2. GET 请求
+## 2. 交互式演示
+
+<iframe
+  src="/icon-conbinder/examples/index.html"
+  width="100%"
+  height="600"
+  style="border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa;"
+  title="Icon Combinder 交互演示"
+  loading="lazy"
+></iframe>
+
+## 3. GET 请求
 
 ```bash
 curl "http://localhost:3000/icon?shape=pin&iconSize=128&borderColor=%23ef4444&bgColor=%23ffffff&enableShadow=1"

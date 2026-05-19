@@ -1,45 +1,60 @@
-# 任务计划：example 页面能力对齐 `views/ui.pug`
+# 计划：将 example/dist 集成到 VitePress
 
 ## 目标
-让 `example/src/App.vue` 作为 `views/ui.pug` 的浏览器替代面，尽可能覆盖同等能力面。
+将 `example/` 的构建产物通过 iframe 嵌入式嵌入到 `docs/` 的 VitePress 示例页面中，发布到 GitHub Pages。
 
-## 范围边界
-- 必须覆盖浏览器侧可完成的全部参数与交互。
-- Node-only 能力单独隔离，不在 example 页里硬做假实现。
-- 重点包括：图像输入、形状/尺寸/颜色、图像缩放与偏移、阴影、抗锯齿、轮廓增强、导出/复制、折叠状态持久化。
+---
 
-## 已确认
-- `example/src/App.vue` 已具备基础三栏布局、预览区、导出区。
-- 目前缺口主要在参数覆盖面和浏览器侧 source 入口完整性。
-- `browser.js` 支持 `kind: "url" | "data" | "file"`，因此 example 页可以覆盖浏览器侧 source 组合。
+## 步骤
 
-## 阶段
+### 1. 修改 example 的 vite base 配置
+- **文件**: `example/vite.config.js`
+- **操作**: 添加 `base: '/examples/'`，使资源路径与 docs base 路径对齐
+- **验证**: 构建后 `dist/index.html` 中资源路径为 `/examples/assets/...`
 
-### Phase 1: 对齐能力清单
-- [x] 读取 `views/ui.pug` / `views/assets/ui.js` / `README.md` / `docs/api.md`
-- [x] 识别 example 页缺失的参数与交互
-- [x] 明确 Node-only 能力在 example 页里的呈现方式（灰显保留入口）
+### 2. 修改 example 的 index.html 引用路径
+- **文件**: `example/index.html`
+- **操作**: 将 `href="/favicon.svg"` 改为 `/examples/favicon.svg`，`src="/src/main.js"` 改为 `/examples/src/main.js`（Vite 会处理）
+- **验证**: 构建后所有资源可被 `/examples/` base 正确解析
 
-### Phase 2: 补齐 browser-side 参数与 source 入口
-- [x] 补齐 `image`、`imageScale`、`imageOffsetY`
-- [x] 补齐轮廓增强全组参数
-- [x] 补齐 source / upload 相关入口的 browser-side 版本
-- [x] 对齐 `JSON / URL / CLI` 输出内容
+### 3. 创建 VitePress customTheme
+- **目录**: `docs/.vitepress/theme/`
+- **文件**: `theme/index.js`
+- **操作**: 导出默认 theme，支持 `doBeforeBuild` 钩子触发 example 联动构建
+- **钩子逻辑**:
+  1. `doBeforeBuild` 中执行 `cd example && vite build`
+  2. 将 `example/dist/*` 复制到 `docs/public/examples/`
+  3. 清理旧产物
 
-### Phase 3: 持久化与状态恢复
-- [x] 折叠分组状态持久化
-- [x] 参数状态与 source 状态持久化
-- [x] 刷新后恢复编辑态
+### 4. 配置 VitePress 使用 customTheme
+- **文件**: `docs/.vitepress/config.mjs`
+- **操作**: 导入并使用 customTheme
 
-### Phase 4: 验证
-- [x] 浏览器页面截图核对
-- [x] 控件交互核对
-- [x] `npm test` 回归通过
+### 5. 在示例页面中嵌入 iframe
+- **文件**: `docs/examples/basic.md`、`docs/examples/recipes.md`
+- **操作**: 添加 iframe 标记，src 指向 `/examples/index.html`
+- **iframe 属性**: width, height, border, loading="lazy" 等
 
-## 待确认问题
-- 无。当前已按“可见但 Node-only 置灰”的方式落地。
+### 6. 验证构建与部署
+- **本地验证**: `vitepress build docs` 和 `vitepress preview docs`
+- **检查点**:
+  - `docs/.vitepress/dist/examples/` 存在且结构正确
+  - iframe 页面可正常加载
+  - GitHub Pages base 路径 `/icon-conbinder/` 正确
 
-## 错误记录
-| 错误 | 发现阶段 | 处理 |
-|------|----------|------|
-| `expandedSections` 在初始化前被 `watch` 引用 | UI 改造阶段 | 调整声明顺序，先定义 `expandedSections` 再注册 `watch` |
+---
+
+## 依赖文件
+- `example/vite.config.js`
+- `example/index.html`
+- `docs/.vitepress/config.mjs`
+- `docs/examples/basic.md`
+- `docs/examples/recipes.md`
+- 新建: `docs/.vitepress/theme/index.js`
+
+---
+
+## 待验证假设
+- example 的 `index.html` 中资源路径（`/favicon.svg`、`/src/main.js`）在 base 变更后仍可被正确解析
+- VitePress customTheme 的 `doBeforeBuild` 钩子可用
+- `docs/public/examples/` 会被 VitePress 作为静态资源正确托管

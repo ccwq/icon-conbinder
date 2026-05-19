@@ -97,7 +97,23 @@
 
 ---
 
-## 历史记录（之前的 Vite + Vue 示例项目）
+## 2026/05/19 - VitePress 集成 Example
+
+### 当前任务
+将 example 构建产物通过 iframe 嵌入到 VitePress 文档中
+
+### 已完成
+1. ✅ 修改 example/index.html 路径（修复 base 导致的路径问题）
+2. ✅ example vite build 成功
+3. ✅ 复制 dist 到 docs/public/examples/
+4. ✅ 添加 iframe 到 basic.md 和 recipes.md
+
+### 问题与解决
+1. **example/index.html 中 `/examples/src/main.js` 构建时无法解析** - 原因：Vite base 为 `/examples/` 时，资源路径变成了绝对路径。解决：恢复为相对路径 `/src/main.js`
+2. **vitepress 模块在根目录不存在** - 需要 npm install 安装
+
+### 当前状态
+npm install 运行中，等待完成后进行 docs build 验证
 
 ### 2026/05/19 上午
 - 创建了 task_plan.md, findings.md, progress.md
