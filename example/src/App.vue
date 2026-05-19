@@ -3,11 +3,14 @@ import { computed, ref, watch, onMounted } from 'vue'
 import { renderIcon } from 'icon-combinder'
 
 // 默认参数
+const defaultImageUrl = './hospital.png?aa'
+const defaultSourceFileName = 'hospital.png'
+
 const defaultState = {
   shape: 'pin',
   iconSize: 36,
-  image: 'file:hospital.png',
-  imageScale: 0.03,
+  image: defaultImageUrl,
+  imageScale: 0.85,
   imageOffsetY: 0,
   borderWidth: 3,
   lineJoin: 'miter',
@@ -29,7 +32,7 @@ const defaultState = {
 }
 
 // 持久化配置
-const STORAGE_KEY = 'icon-combinder.browser-ui.v1'
+const STORAGE_KEY = 'icon-combinder.browser-ui.v2'
 const PERSIST_KEYS = [
   'shape', 'iconSize', 'image', 'imageScale', 'imageOffsetY', 'borderWidth', 'lineJoin',
   'borderColor', 'bgColor', 'contourEnhance', 'contourOuterGlow', 'contourOuterWidth',
@@ -143,10 +146,10 @@ function writePersistedState() {
 const form = ref({ ...defaultState })
 
 // 图像来源
-const sourceKind = ref('file')
+const sourceKind = ref('url')
 const sourceFile = ref(null)
-const sourceFileName = ref('hospital.png')
-const sourcePreviewUrl = ref('./hospital.png')
+const sourceFileName = ref(defaultSourceFileName)
+const sourcePreviewUrl = ref(defaultImageUrl)
 const sourceDataUrl = ref('')
 const sourceObjectUrl = ref('')
 const previewBackgroundColor = ref('#ef4444')
@@ -200,7 +203,7 @@ const lineJoinOptions = [
 ]
 
 // 示例图片URL
-const sampleImageUrl = './hospital.png'
+const sampleImageUrl = defaultImageUrl
 
 // 展开/折叠控制
 const expandedSections = ref({
@@ -316,11 +319,12 @@ function revokeSourceObjectUrl() {
 
 function applyDefaultSourceState() {
   revokeSourceObjectUrl()
-  sourceKind.value = 'file'
+  sourceKind.value = 'url'
   sourceFile.value = null
-  sourceFileName.value = 'hospital.png'
-  sourcePreviewUrl.value = './hospital.png'
+  sourceFileName.value = defaultSourceFileName
+  sourcePreviewUrl.value = defaultImageUrl
   sourceDataUrl.value = ''
+  form.value.image = defaultImageUrl
 }
 
 function resetSourceState() {
