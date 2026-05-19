@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Debug Test</title>
+</head>
+<body>
+  <div id="app">
+    <p>Loading...</p>
+  </div>
+  <script type="module">
+    window.onerror = function(msg, url, line, col, error) {
+      document.getElementById('app').innerHTML += '<pre style="color:red">Global Error: ' + msg + '\nLine: ' + line + '</pre>';
+    };
+
+    window.addEventListener('unhandledrejection', function(e) {
+      document.getElementById('app').innerHTML += '<pre style="color:red">Unhandled Promise Rejection: ' + e.reason + '</pre>';
+    });
+
+    try {
+      import('http://localhost:5173/@fs/E:/temporary-project/icon-combinder/browser.mjs')
+        .then(m => {
+          document.getElementById('app').innerHTML += '<p>Module loaded! renderIcon=' + typeof m.renderIcon + '</p>';
+
+          return m.renderIcon({
+            shape: 'pin',
+            iconSize: 64,
+            borderWidth: 2,
+            borderColor: '#ef4444',
+            bgColor: '#ffffff',
+            enableShadow: false,
+            exportSquare: true,
+            exportStrategy: 'center',
+            antiAliasScale: 1,
+            resizeStrategy: 'smooth-high',
+            contourEnhance: false,
+            lineJoin: 'round',
+            imageScale: 1.0,
+            imageOffsetY: 0,
+          }, { kind: 'url', value: 'http://localhost:5173/sample-icon.png' });
+        })
+        .then(result => {
+          document.getElementById('app').innerHTML = '<img src="' + result.dataUrl + '" style="max-width:200px"/>';
+        })
+        .catch(err => {
+          document.getElementById('app').innerHTML = '<pre style="color:red">Error: ' + err.message + '\n' + err.stack + '</pre>';
+        });
+    } catch(e) {
+      document.getElementById('app').innerHTML = '<pre style="color:red">Catch: ' + e.message + '\n' + e.stack + '</pre>';
+    }
+  </script>
+</body>
+</html>

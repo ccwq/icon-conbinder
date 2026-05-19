@@ -16,10 +16,12 @@
   ],
   "exports": {
     ".": {
+      "browser": "./browser.mjs",
       "require": "./index.js",
       "import": "./index.mjs"
     },
     "./browser.js": "./browser.js",
+    "./browser.mjs": "./browser.mjs",
     "./server.js": "./server.js",
     "./imgbed-server.js": "./imgbed-server.js",
     "./package.json": "./package.json"

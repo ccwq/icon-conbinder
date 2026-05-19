@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Module Test</title>
+</head>
+<body>
+  <h1>Module Test</h1>
+  <div id="result">Loading...</div>
+  <script type="module">
+    import { renderIcon } from 'http://localhost:5173/@fs/E:/temporary-project/icon-combinder/browser.mjs';
+
+    document.getElementById('result').innerHTML = '<p>Module loaded! renderIcon=' + typeof renderIcon + '</p>';
+
+    renderIcon({
+      shape: 'pin',
+      iconSize: 64,
+      borderWidth: 2,
+      borderColor: '#ef4444',
+      bgColor: '#ffffff',
+      enableShadow: false,
+      exportSquare: true,
+      exportStrategy: 'center',
+      antiAliasScale: 1,
+      resizeStrategy: 'smooth-high',
+      contourEnhance: false,
+      lineJoin: 'round',
+      imageScale: 1.0,
+      imageOffsetY: 0,
+    }, { kind: 'url', value: 'http://localhost:5173/sample-icon.png' })
+      .then(result => {
+        document.getElementById('result').innerHTML = '<p>Success!</p><img src="' + result.dataUrl + '" style="max-width:200px"/>';
+      })
+      .catch(err => {
+        document.getElementById('result').innerHTML = '<pre style="color:red">Error: ' + err.message + '</pre>';
+      });
+  </script>
+</body>
+</html>
