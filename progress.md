@@ -103,17 +103,28 @@
 将 example 构建产物通过 iframe 嵌入到 VitePress 文档中
 
 ### 已完成
-1. ✅ 修改 example/index.html 路径（修复 base 导致的路径问题）
-2. ✅ example vite build 成功
-3. ✅ 复制 dist 到 docs/public/examples/
-4. ✅ 添加 iframe 到 basic.md 和 recipes.md
+1. ✅ 创建 VitePress customTheme (`docs/.vitepress/theme/index.js`)
+2. ✅ 修改 example/index.html 路径配置
+3. ✅ 修改 example vite.config.js base 为相对路径 `./`
+4. ✅ example vite build 成功
+5. ✅ 复制 dist 到 docs/public/examples/
+6. ✅ 添加 iframe 到 basic.md 和 recipes.md
+7. ✅ iframe src 使用 `/icon-conbinder/examples/index.html` 匹配 base
+8. ✅ 推送到 GitHub Pages 验证
 
-### 问题与解决
-1. **example/index.html 中 `/examples/src/main.js` 构建时无法解析** - 原因：Vite base 为 `/examples/` 时，资源路径变成了绝对路径。解决：恢复为相对路径 `/src/main.js`
-2. **vitepress 模块在根目录不存在** - 需要 npm install 安装
+### 关键修改
+- `example/vite.config.js`: `base: '/examples/'` → `base: './'`
+- `docs/examples/basic.md`: iframe src `/examples/index.html` → `/icon-conbinder/examples/index.html`
+- `docs/examples/recipes.md`: 同上
 
 ### 当前状态
-npm install 运行中，等待完成后进行 docs build 验证
+- example 页面已推送到 GitHub Pages (https://ccwq.github.io/icon-conbinder/examples/index.html)
+- iframe 已嵌入到 basic 和 recipes 页面
+- 但 VitePress 的 SSR 输出 `<div id="app"><!----></div>` 表示客户端 JavaScript 尚未渲染内容
+- 这可能是 VitePress 的已知行为或需要额外配置
+
+### 验证方法
+在浏览器中打开 https://ccwq.github.io/icon-conbinder/examples/basic 应能看到带 iframe 的页面
 
 ### 2026/05/19 上午
 - 创建了 task_plan.md, findings.md, progress.md
