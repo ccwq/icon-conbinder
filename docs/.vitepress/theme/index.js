@@ -1,7 +1,9 @@
-// VitePress custom theme
+import DefaultTheme from "vitepress/theme";
+
+// Keep the default VitePress Layout; this repo only adds hooks on top.
 export default {
-  extends: {},
+  extends: DefaultTheme,
   async enhanceApp({ app }) {
-    // Custom theme setup
-  }
-}
+    // Reserved for future theme-level setup.
+  },
+};
