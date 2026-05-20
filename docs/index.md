@@ -25,11 +25,10 @@ features:
 
 - npm 安装、库引用和浏览器 UMD 入口
 - `/icon`、`/info`、`/ui.html` 和图床接口说明
-- 本地测试服务和 GitHub Pages 文档站入口
+- 本地测试服务和示例工作台入口
 
 ## 快速入口
 
 - [快速开始](/guide/getting-started)
 - [API 参考](/api)
 - [请求示例](/examples/basic)
-- [GitHub Pages 发布](/guide/github-pages)

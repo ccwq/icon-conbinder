@@ -11,9 +11,8 @@ export default defineConfig({
     nav: [
       { text: "指南", link: "/guide/getting-started" },
       { text: "API", link: "/api" },
-      { text: "示例", link: "/examples/basic" },
+      { text: "示例", link: "/examples/index.html" },
       { text: "进阶", link: "/examples/recipes" },
-      { text: "发布", link: "/guide/github-pages" },
     ],
     sidebar: {
       "/guide/": [
@@ -21,7 +20,6 @@ export default defineConfig({
           text: "指南",
           items: [
             { text: "快速开始", link: "/guide/getting-started" },
-            { text: "GitHub Pages", link: "/guide/github-pages" },
           ],
         },
       ],
@@ -29,6 +27,7 @@ export default defineConfig({
         {
           text: "文档",
           items: [
+            { text: "示例工作台", link: "/examples/index.html" },
             { text: "API", link: "/api" },
             { text: "示例", link: "/examples/basic" },
             { text: "进阶示例", link: "/examples/recipes" },
