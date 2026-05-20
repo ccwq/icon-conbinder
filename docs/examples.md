@@ -18,10 +18,10 @@ layout: false
   </head>
   <body>
     <noscript>
-      <p>
-        正在跳转到
-        <a href="/icon-conbinder/examples/index.html">/examples/index.html</a>
-      </p>
+        <p>
+          正在跳转到
+          <a href="/icon-conbinder/examples/index.html">/examples/index.html</a>
+        </p>
     </noscript>
   </body>
 </html>

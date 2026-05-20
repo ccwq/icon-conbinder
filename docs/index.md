@@ -3,8 +3,8 @@ layout: home
 title: Icon Combinder
 hero:
   name: Icon Combinder
-  text: 可被其他项目引用的图标合成库
-  tagline: 同一套合成逻辑，同时支持 Node、浏览器 UMD 和本地测试服务
+  text: 同一套 Wrapper + Icon 合成逻辑
+  tagline: 既能作为库被其他项目引用，也能用本地工作台快速调参和验证导出结果
   actions:
     - theme: brand
       text: 快速开始
@@ -24,8 +24,8 @@ features:
 ## 你会在这里找到什么
 
 - npm 安装、库引用和浏览器 UMD 入口
-- `/icon`、`/info`、`/ui.html` 和图床接口说明
-- 本地测试服务和示例工作台入口
+- `/ui.html`、`/icon`、`/info` 和图床接口说明
+- 本地测试服务、请求示例和进阶用法
 
 ## 快速入口
 

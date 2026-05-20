@@ -3,15 +3,16 @@ import { defineConfig } from "vitepress";
 export default defineConfig({
   lang: "zh-CN",
   title: "Icon Combinder",
-  description: "Wrapper 与 Icon 合成工具的文档站点",
+  description: "Icon Combinder 的快速开始、API 参考和示例工作台",
   base: "/icon-conbinder/",
   cleanUrls: true,
   lastUpdated: true,
   themeConfig: {
+    logo: "/examples/favicon.svg",
     nav: [
       { text: "指南", link: "/guide/getting-started" },
       { text: "API", link: "/api" },
-      { text: "示例", link: "/examples/index.html" },
+      { text: "示例工作台", link: "/examples/index.html" },
       { text: "进阶", link: "/examples/recipes" },
     ],
     sidebar: {
