@@ -1,6 +1,6 @@
 {
   "name": "icon-combinder",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Library for composing wrapper icons, with a local test server and browser UMD entry",
   "main": "./index.js",
   "license": "MIT",

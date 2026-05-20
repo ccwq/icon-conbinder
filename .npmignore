@@ -6,9 +6,8 @@ pin-icon-generator.html
 skills-lock.json
 CONTEXT.md
 AGENTS.md
-.env
-.env.*
-!.env.example
+.env.example
+%temp%/agent-brower-captures/
 *.tgz
 coverage/
 dist/

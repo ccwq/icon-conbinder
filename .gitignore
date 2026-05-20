@@ -8,6 +8,5 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .DS_Store
-.env
-.env.*
-!.env.example
+.env.example
+%temp%/agent-brower-captures/
